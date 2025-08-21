@@ -1,0 +1,1953 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trader Questline — 12-Week Daily Quests</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#161a38; --card:#1a1f47; --ink:#e7eaf6; --muted:#aeb4d6;
+    --accent:#7bdff2; --accent2:#b28dff; --ok:#7bd88f; --warn:#ffce6b; --danger:#ff7a90;
+    --bar-bg:#2a2f59; --bar-fill:#7bdff2; --bar-day:#7bd88f;
+    --paper-bg:#ffffff; --paper-ink:#111111; --shadow: 0 8px 24px rgba(0,0,0,.35);
+    --cardW:300px;
+  }
+  [data-theme="light"]{
+    --bg:#f7f8ff; --panel:#ffffff; --card:#f6f7ff; --ink:#0b0d1a; --muted:#4a4f7a;
+    --bar-bg:#e3e6ff; --paper-bg:#ffffff; --paper-ink:#0b0d1a;
+  }
+  [data-theme="hc"]{
+    --bg:#000; --panel:#000; --card:#111; --ink:#fff; --muted:#ccc; --accent:#00d4ff; --accent2:#ffd400; --ok:#00ff8a; --warn:#ffd400; --danger:#ff3b3b; --bar-bg:#222; --bar-fill:#00d4ff; --bar-day:#00ff8a;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+    line-height:1.45;}
+  header{position:sticky; top:0; z-index:80; background:linear-gradient(180deg, color-mix(in lab, var(--bg), #000 10%), color-mix(in lab, var(--bg), #000 2%)); backdrop-filter: blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.08);}
+  .wrap{max-width:1200px; margin:0 auto; padding:12px 16px;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .brand{display:flex; align-items:center; gap:10px}
+  .brand h1{font-size:18px; margin:0}
+  .nav{display:flex; gap:8px; flex-wrap:wrap}
+  .btn, select, input[type="date"], input[type="time"], input[type="number"], input[type="text"], input[type="url"], textarea{
+    background:#1b2148; color:var(--ink); border:1px solid rgba(255,255,255,.12);
+    padding:8px 10px; border-radius:8px; font-size:14px; cursor:pointer;
+  }
+  [data-theme="light"] .btn, [data-theme="light"] select, [data-theme="light"] input, [data-theme="light"] textarea{ background:#eef1ff; border-color:#ccd2ff; color:#0b0d1a}
+  .btn.secondary{background:#222864}
+  .btn.ghost{background:transparent; border-color:rgba(255,255,255,.2)}
+  .btn.small{padding:6px 8px; font-size:12px}
+  .btn.round{border-radius:999px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; user-select:none}
+  .btn:disabled{opacity:.6; cursor:not-allowed}
+  .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#212863; color:var(--accent); font-weight:600; font-size:12px; border:1px solid rgba(255,255,255,.1);}
+  .toggle{display:inline-flex; align-items:center; gap:6px}
+
+  .progress-row{display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap}
+  .progress-label{font-size:13px; color:var(--muted)}
+  .bar{flex:1; min-width:220px; height:10px; background:var(--bar-bg); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.08)}
+  .fill{height:100%; width:0%}
+  .fill.total{background:linear-gradient(90deg, var(--bar-fill), #5dc8ff); transition:width .25s ease}
+  .fill.day{background:linear-gradient(90deg, var(--bar-day), #3ed68d); transition:width .25s ease}
+  .percent{font-size:13px; font-weight:600; min-width:44px; text-align:right}
+
+  main.wrap{display:flex; gap:16px; align-items:flex-start; padding-top:10px}
+  .homebase{flex:1; min-width:0}
+  .sidebar{width:320px; position:sticky; top:100px; align-self:flex-start; background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px}
+
+  .tabs{display:flex; gap:8px; margin:6px 0 12px}
+  .tab{padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.12); cursor:pointer; background:#1b2148}
+  .tab.active{outline:2px solid rgba(123,223,242,.6)}
+  .view{display:none}
+  .view.active{display:block}
+
+  .panel{background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px; margin-bottom:12px}
+  .grid{display:grid; gap:12px; grid-template-columns: repeat( auto-fill, minmax(260px, 1fr) )}
+
+  .quest{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px; cursor:pointer; transition:transform .12s ease, border-color .12s ease}
+  .quest:hover{transform:translateY(-2px); border-color:rgba(255,255,255,.18)}
+  .quest h3{margin:4px 0 6px; font-size:15px}
+  .quest .meta{color:var(--muted); font-size:12px; margin-bottom:8px}
+  .quest .desc{font-size:13px; color:var(--ink)}
+  .quest .mini{display:flex; align-items:center; gap:8px; margin-top:8px}
+  .quest .mini .bar{height:8px}
+  .quest .mini .fill.day{height:8px}
+
+  /* Week scroller */
+  .weekScrollerWrap{position:relative}
+  .weekScroller{display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px; scroll-behavior:smooth;}
+  .weekCard{min-width:var(--cardW); max-width:var(--cardW); scroll-snap-align:start; background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px; box-shadow: var(--shadow); flex:0 0 auto;}
+  .weekCard h4{margin:0 0 8px}
+  .scrollerArrow{position:absolute; top:50%; transform:translateY(-50%); z-index:2; background:#1b2148; border:1px solid rgba(255,255,255,.2); box-shadow: var(--shadow);}
+  .scrollerArrow.left{left:-8px}
+  .scrollerArrow.right{right:-8px}
+
+  /* Day sheet */
+  .dayView{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; z-index:90}
+  .daySheet{position:absolute; inset:auto 0 0 0; margin:0 auto; max-width:980px; background:var(--panel); border-radius:16px 16px 0 0; border:1px solid rgba(255,255,255,.12); padding:12px; overflow:auto; max-height:88%}
+  .daySheet.fullscreen{position:fixed; inset:0; border-radius:0; max-width:none; max-height:none; padding:16px; border:none;}
+  .dayHeader{display:flex; align-items:center; gap:8px; justify-content:space-between; flex-wrap:wrap}
+  .dayTitle{display:flex; align-items:center; gap:10px}
+  .dayH1{font-size:18px; margin:6px 0}
+  .stickyBar{position:sticky; top:0; z-index:5; background:linear-gradient(180deg, color-mix(in lab, var(--panel), #000 10%), color-mix(in lab, var(--panel), #000 0%)); padding:8px; border-radius:12px; border:1px solid rgba(255,255,255,.08); margin-top:8px}
+  .twoCols{display:grid; gap:12px; grid-template-columns: 1.2fr 0.8fr}
+  .section h4{margin:8px 0 6px; color:var(--accent2); font-size:14px}
+  .checklist{margin:8px 0 10px; padding-left:0; list-style:none}
+  .checklist li{margin:6px 0; display:flex; gap:8px; align-items:center}
+  .checklist input[type="checkbox"]{transform:translateY(1px)}
+  textarea{width:100%; min-height:160px; resize:vertical; background:#121641; color:#e7eaf6; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px; font-size:14px}
+  [data-theme="light"] textarea{ background:#eef1ff; color:#0b0d1a; border-color:#ccd2ff}
+  .noteImages{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+  .noteImages img{max-width:120px; max-height:120px; border-radius:8px; border:1px solid rgba(255,255,255,.12)}
+
+  .cooldown{font-size:12px; color:var(--warn)}
+  .pill{padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:#20265e; font-size:12px}
+  .pill.green{background:#143b2a; border-color:#1c6b4c}
+  .pill.red{background:#3b1420; border-color:#6b1c33}
+  .lockMsg{color:var(--warn); font-size:12px}
+  .tooltip{border-bottom:1px dotted; cursor:help}
+  .anchor{scroll-margin-top:80px}
+
+  /* Day list */
+  .filters{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px}
+  .dayList{display:grid; gap:10px}
+  .dayRow{display:grid; grid-template-columns: 110px 1fr auto auto; gap:10px; align-items:center; background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:8px}
+  .dayRow .date{color:var(--muted); font-size:12px}
+  .dayRow .title{font-size:14px}
+  .dayRow .mini{display:flex; align-items:center; gap:8px}
+  .dayRow .bar{width:140px; height:8px}
+  .dayRow .fill.day{height:8px}
+  .locked{opacity:.6}
+
+  /* Today widget */
+  .todayWidget{position:fixed; right:16px; bottom:16px; z-index:85; width:340px; max-width:92vw; background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px; box-shadow: var(--shadow);}
+  .todayHeader{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .todayHeader h4{margin:0; font-size:14px}
+  .twBody{margin-top:6px}
+  .twRow{display:flex; align-items:center; gap:8px}
+  .twMini{display:flex; align-items:center; gap:8px}
+  .twMini .bar{width:140px; height:8px}
+  .twMini .fill.day{height:8px}
+  .twList{list-style:none; margin:6px 0 0; padding:0; max-height:180px; overflow:auto}
+  .twList li{display:flex; gap:8px; margin:4px 0}
+
+  /* Dashboard */
+  .dash{display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(260px,1fr));}
+  .widget{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px}
+  canvas{width:100%; height:140px; background:#11163c; border-radius:8px}
+  [data-theme="light"] canvas{ background:#e8ebff}
+
+  /* Guide page */
+  .guideCol{display:grid; grid-template-columns: 280px 1fr; gap:16px}
+  .guideToc{position:sticky; top:92px; align-self:start; background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px; max-height:70vh; overflow:auto}
+  .guideToc h4{margin:6px 0}
+  .guideToc a{display:block; color:var(--ink); text-decoration:none; padding:4px 6px; border-radius:6px}
+  .guideToc a:hover{background:#1b2148}
+  .searchRow{display:flex; gap:8px; align-items:center; margin-bottom:8px}
+  .glossary{display:grid; gap:8px}
+  .term{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:10px}
+  .term b{color:var(--accent)}
+  .howto .panel h4{color:var(--accent2)}
+  .muted{color:var(--muted); font-size:12px}
+
+  /* Print */
+  @media print {
+    header, .sidebar, .dayView, .todayWidget{display:none !important}
+    body{background:var(--paper-bg); color:var(--paper-ink)}
+    .panel, .quest, .weekCard, .dayRow, .widget{background:#fff; color:#111; border:1px solid #ddd}
+    .fill.total, .fill.day{background:#333}
+  }
+  @media (max-width:1000px){ .guideCol{grid-template-columns:1fr} .guideToc{position:static; max-height:none} }
+  @media (max-width:880px){
+    main.wrap{flex-direction:column}
+    .sidebar{position:static; width:auto}
+    .twoCols{grid-template-columns:1fr}
+    .daySheet{max-height:100%; border-radius:16px; inset:4% 0 0 0}
+    .dayRow{grid-template-columns: 88px 1fr auto}
+    .dayRow .bar{display:none}
+  }
+</style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <span class="badge">Trader Questline</span>
+        <h1>12-Week Daily Quests</h1>
+      </div>
+      <nav class="nav">
+        <button class="btn tabBtn" data-tab="week" title="g then w">Week</button>
+        <button class="btn tabBtn" data-tab="day" title="g then d">Day</button>
+        <button class="btn tabBtn" data-tab="goals" title="g then o">Goals</button>
+        <button class="btn tabBtn" data-tab="guide" title="g then h">Guide</button>
+        <button class="btn ghost" id="printBtn">Print / Save PDF</button>
+        <div class="toggle">
+          <label class="progress-label">Theme</label>
+          <select id="themeSel">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="hc">High Contrast</option>
+          </select>
+        </div>
+      </nav>
+    </div>
+
+    <div class="progress-row">
+      <div class="progress-label" id="totalProgressLabel">Total progress: 0</div>
+      <div class="bar" aria-label="Total progress"><div class="fill total" id="totalFill"></div></div>
+      <div class="percent" id="totalPct">0%</div>
+    </div>
+    <div class="progress-row" id="dailyProgressWrap" style="display:none">
+      <div class="progress-label" id="dailyProgressLabel">Today’s progress</div>
+      <div class="bar" aria-label="Daily progress"><div class="fill day" id="dailyFill"></div></div>
+      <div class="percent" id="dailyPct">0%</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="homebase">
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-view="week">Week</button>
+        <button class="tab" data-view="day">Day</button>
+        <button class="tab" data-view="goals">Goals</button>
+        <button class="tab" data-view="guide">Guide</button>
+      </div>
+
+      <!-- Week View -->
+      <section class="view active" id="view-week">
+        <div class="inline" style="margin-bottom:8px">
+          <label class="progress-label">Plan start date:</label>
+          <input type="date" id="startDate">
+          <button class="btn small" id="applyStart">Apply</button>
+          <span class="progress-label" id="scheduleInfo"></span>
+          <button class="btn small ghost" id="toggleWeeks">Hide All Weeks</button>
+          <span class="progress-label">Weekly focus:</span>
+          <select id="focusSel"></select>
+          <button class="btn small ghost" id="focusClear">Clear</button>
+        </div>
+
+        <div class="panel weekScrollerWrap">
+          <button class="btn round scrollerArrow left" id="scrollLeft" title="Previous weeks">‹</button>
+          <button class="btn round scrollerArrow right" id="scrollRight" title="Next weeks">›</button>
+          <div id="weekScroller" class="weekScroller" aria-label="Weeks"></div>
+        </div>
+
+        <div class="panel" id="weeksFullPanel">
+          <h3 style="margin:0 0 8px">All Weeks</h3>
+          <div id="weeksFullList"></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Calendar Timeline (All Days)</h3>
+          <div id="calendarList" class="dayList"></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Process Dashboard</h3>
+          <div class="dash">
+            <div class="widget">
+              <h4 style="margin:0 0 6px">7‑Day Process Score</h4>
+              <canvas id="processChart"></canvas>
+            </div>
+            <div class="widget">
+              <h4 style="margin:0 0 6px">R Equity Curve</h4>
+              <canvas id="equityChart"></canvas>
+            </div>
+            <div class="widget">
+              <h4 style="margin:0 0 6px">Setup Cohort (E by setup)</h4>
+              <div id="cohortSetup" class="progress-label">—</div>
+            </div>
+            <div class="widget">
+              <h4 style="margin:0 0 6px">Regime Cohort (E by regime)</h4>
+              <div id="cohortRegime" class="progress-label">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Weekly Review</h3>
+          <div class="inline">
+            <select id="reviewWeekSel"></select>
+            <button class="btn small" id="genReview">Generate</button>
+            <button class="btn small ghost" id="printReview">Print Review</button>
+          </div>
+          <div id="reviewOutput" class="progress-label" style="margin-top:8px">—</div>
+        </div>
+      </section>
+
+      <!-- Day View -->
+      <section class="view" id="view-day">
+        <div class="panel">
+          <div class="filters">
+            <button class="btn small secondary" id="todayBtn">Open Today</button>
+            <button class="btn small ghost" id="scrollToToday">Scroll to Today</button>
+            <span class="progress-label">Filter:</span>
+            <select id="dayFilter">
+              <option value="all">All</option>
+              <option value="not_started">Not started</option>
+              <option value="in_progress">In progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <span class="pill" id="countsPill">—</span>
+            <span class="progress-label" style="margin-left:auto">Quick open:</span>
+            <select id="dayPicker"></select>
+            <button class="btn small" id="openDay">Open Day</button>
+            <button class="btn small ghost" id="icsDay">.ics</button>
+          </div>
+          <div id="daySummary" class="progress-label"></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0">All Scheduled Days</h3>
+          <div id="dayListFull" class="dayList"></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0">Quick Notes</h3>
+          <textarea id="globalNotes" placeholder="High-level notes for your journey..."></textarea>
+        </div>
+      </section>
+
+      <!-- Goals View -->
+      <section class="view" id="view-goals">
+        <div class="panel">
+          <h3 style="margin-top:0">Milestones &amp; Goals</h3>
+          <ul class="checklist" id="goalsList"></ul>
+          <div class="inline" style="margin-top:8px">
+            <button class="btn small" id="exportICS">Export Plan (.ics)</button>
+            <button class="btn small" id="notifBtn">Enable Notifications</button>
+            <label class="progress-label">Edge window:</label>
+            <input type="time" id="edgeStart"> to <input type="time" id="edgeEnd">
+            <button class="btn small ghost" id="resetProgress">Reset Progress</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Risk Guardrails</h3>
+          <div class="progress-label">If you hit −3R, toggle lockout here to enforce pause for the next day.</div>
+          <div class="inline" style="margin-top:8px">
+            <select id="lockDaySel"></select>
+            <button class="btn small" id="setLock">Toggle Lockout</button>
+            <span id="lockState" class="pill">—</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Theme &amp; Backup</h3>
+          <div class="inline">
+            <label class="progress-label">Theme:</label>
+            <select id="themeSel2">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="hc">High Contrast</option>
+            </select>
+            <button class="btn small" id="printWeek">Print Week</button>
+            <button class="btn small" id="printDay">Print Day</button>
+            <button class="btn small" id="backupJSON">Export JSON</button>
+            <input type="file" id="restoreJSON" accept=".json" style="display:none">
+            <button class="btn small ghost" id="importJSON">Import JSON</button>
+          </div>
+          <div class="progress-label" id="storageHint" style="margin-top:8px"></div>
+          <div class="inline" style="margin-top:8px">
+            <label class="progress-label tooltip" title="WebDAV URL, e.g., https://dav.box.com/dav/folder">WebDAV URL</label>
+            <input type="url" id="davUrl" placeholder="https://.../dav/path">
+            <input type="text" id="davUser" placeholder="User">
+            <input type="password" id="davPass" placeholder="App password">
+            <button class="btn small" id="davPush">Push Backup</button>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <button class="btn small ghost" id="downscaleImgs">Downscale Thumbnails</button>
+            <span id="quotaInfo" class="pill">Storage: —</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guide View -->
+      <section class="view" id="view-guide">
+        <div class="panel">
+          <h3 style="margin:0 0 8px">Guide</h3>
+          <div class="guideCol">
+            <aside class="guideToc">
+              <div class="searchRow">
+                <input type="text" id="guideSearch" placeholder="Search terms &amp; how‑to..." style="width:100%">
+              </div>
+              <h4>Index</h4>
+              <a href="#g-start">Getting started</a>
+              <a href="#g-week">Week planning</a>
+              <a href="#g-day">Working a day</a>
+              <a href="#g-trades">Trades &amp; metrics</a>
+              <a href="#g-guardrails">Risk &amp; lockouts</a>
+              <a href="#g-dash">Dashboards</a>
+              <a href="#g-backup">Backups &amp; export</a>
+              <a href="#g-shortcuts">Shortcuts</a>
+              <a href="#g-troubleshoot">Troubleshooting</a>
+              <h4 style="margin-top:12px">Glossary</h4>
+              <div id="tocGlossary" class="muted">A–Z below</div>
+            </aside>
+            <div>
+              <!-- How-to -->
+              <div class="howto">
+                <div class="panel anchor" id="g-start">
+                  <h4>Getting started</h4>
+                  <ol>
+                    <li>Set Plan start date in Week tab (Mon–Fri scheduling).</li>
+                    <li>Pick a weekly focus (optional) to pin in Day and sidebar.</li>
+                    <li>Optionally set Edge window in Goals for time-boxing and reminders.</li>
+                  </ol>
+                </div>
+                <div class="panel anchor" id="g-week">
+                  <h4>Week planning</h4>
+                  <ul>
+                    <li>Use the week scroller arrows or drag to browse weeks.</li>
+                    <li>All Weeks shows every card; toggle visibility to reduce clutter.</li>
+                    <li>Generate a Weekly Review, then Print/Save PDF.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-day">
+                  <h4>Working a day</h4>
+                  <ul>
+                    <li>Open today/next from Day tab or the Today widget.</li>
+                    <li>Check items in Learn, Drills, Trades, Review, and Side. Progress is weighted.</li>
+                    <li>If outside your edge window, marking a trade prompts for an override reason.</li>
+                    <li>Use Full Screen (f), Space to toggle next unchecked item, Esc to close.</li>
+                    <li>Paste screenshots into Notes; they save locally. Downscale later in Goals.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-trades">
+                  <h4>Trades &amp; metrics</h4>
+                  <ul>
+                    <li>Attempts: 2 per day; a 3rd requires an override reason.</li>
+                    <li>Cooldown: 20s after marking a trade to prevent snap re-entry.</li>
+                    <li>Tag each attempt Setup A/B; enter Planned R, MAE, MFE, and Result R.</li>
+                    <li>Scatter plot shows MAE vs MFE; stop hint suggests a noise-resilient stop zone.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-guardrails">
+                  <h4>Risk &amp; lockouts</h4>
+                  <ul>
+                    <li>Red card: toggle if you widened a stop or revenge traded; progress penalty applies.</li>
+                    <li>−3R Lockout: set for the next day in Review or Goals to enforce a pause.</li>
+                    <li>Locked days cannot be opened until you clear the lockout in Goals.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-dash">
+                  <h4>Dashboards</h4>
+                  <ul>
+                    <li>Process trend: 7-day rolling average of your Process % inputs.</li>
+                    <li>Equity curve: cumulative R from daily Result (R).</li>
+                    <li>Cohorts: Setup A/B expectancy (R/trade) and Trend/Chop R/day from your tags.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-backup">
+                  <h4>Backups &amp; export</h4>
+                  <ul>
+                    <li>Export/import JSON in Goals (includes notes and pasted images).</li>
+                    <li>Optional WebDAV push (subject to CORS) for off-device backups.</li>
+                    <li>.ics export per day or full plan; Print to PDF anywhere.</li>
+                    <li>Storage health shows usage; downscale thumbnails to save space.</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-shortcuts">
+                  <h4>Keyboard shortcuts</h4>
+                  <ul>
+                    <li>g then w/d/o/h: switch to Week/Day/Goals/Guide</li>
+                    <li>f: toggle Day full screen</li>
+                    <li>Space: toggle next unchecked item</li>
+                    <li>Esc: close Day drawer</li>
+                  </ul>
+                </div>
+                <div class="panel anchor" id="g-troubleshoot">
+                  <h4>Troubleshooting</h4>
+                  <ul>
+                    <li>Nothing loads or progress doesn’t save: open the file directly in a browser (not sandboxed/embedded).</li>
+                    <li>Arrows don’t scroll: drag the scroller, or use the “Go to current week” quick action.</li>
+                    <li>No notifications: allow notifications and set an edge window start time.</li>
+                    <li>Storage near quota: downscale images or export JSON and clear data.</li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Glossary -->
+              <div class="panel">
+                <h4 class="anchor" id="glossary">Glossary (A–Z)</h4>
+                <div id="glossaryList" class="glossary"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="panel">
+      <h3 style="margin:4px 0 8px">Quick Actions</h3>
+      <div class="inline">
+        <button class="btn small" id="qaWeek">Go to current week</button>
+        <button class="btn small" id="qaDay">Open today/next</button>
+      </div>
+      <div class="inline" style="margin-top:8px">
+        <span class="progress-label">Focus:</span>
+        <span id="focusNow" class="pill">—</span>
+      </div>
+      <div class="progress-label" id="storageHealth" style="margin-top:8px"></div>
+    </div>
+    <div class="panel">
+      <h3 style="margin:4px 0 8px">Today</h3>
+      <div id="todayBlock" class="progress-label">Set a plan start date.</div>
+    </div>
+  </aside>
+</main>
+
+<!-- Day Drawer -->
+<div class="dayView" id="dayView">
+  <div class="daySheet" id="daySheet" role="dialog" aria-modal="true" aria-labelledby="daySheetTitle">
+    <div class="dayHeader">
+      <div class="dayTitle">
+        <div class="badge" id="daySheetBadge">Day —</div>
+        <h2 class="dayH1" id="daySheetTitle">—</h2>
+      </div>
+      <div class="inline">
+        <button class="btn small" id="toggleFS">Full Screen (f)</button>
+        <button class="btn small" id="icsThis">.ics</button>
+        <button class="btn small secondary" id="printThis">Print</button>
+        <button class="btn small ghost" id="closeDay">Close (Esc)</button>
+      </div>
+    </div>
+
+    <div class="stickyBar">
+      <div class="progress-row" style="margin:0">
+        <div class="progress-label" id="miniDayLabel">Day progress</div>
+        <div class="bar" style="max-width:480px"><div class="fill day" id="miniDayFill"></div></div>
+        <div class="percent" id="miniDayPct">0%</div>
+        <span class="pill" id="focusPin">Focus: —</span>
+      </div>
+    </div>
+
+    <div class="twoCols" id="dayContent">
+      <div>
+        <div class="section">
+          <h4>Objective</h4>
+          <div id="objText" class="progress-label"></div>
+        </div>
+        <div class="section">
+          <h4>Regime Helper</h4>
+          <div class="inline">
+            <label class="progress-label">Gap vs prior close:</label>
+            <select id="rhGap"><option>Flat</option><option>Gap Up</option><option>Gap Down</option></select>
+            <label class="progress-label">Market breadth:</label>
+            <select id="rhBreadth"><option>Neutral</option><option>Strong</option><option>Weak</option></select>
+            <label class="progress-label">RVOL:</label>
+            <select id="rhRvol"><option>~1</option><option>1.5+</option><option>2.5+</option></select>
+            <button class="btn small" id="rhSuggest">Suggest</button>
+            <span class="pill" id="rhOut">—</span>
+          </div>
+        </div>
+        <div class="section">
+          <h4>Core Learn (60 min)</h4>
+          <ul class="checklist" id="learnList"></ul>
+        </div>
+        <div class="section">
+          <h4>Skill Drills (30–60 min)</h4>
+          <ul class="checklist" id="drillList"></ul>
+        </div>
+        <div class="section">
+          <h4>Paper/Live Trades (1–2 attempts)</h4>
+          <div class="progress-label">Attempts left today: <b id="attemptsLeft">2</b> (soft lockout ladder enabled)</div>
+          <ul class="checklist" id="tradeList"></ul>
+          <div class="progress-label cooldown" id="cooldownMsg" style="display:none">Cooldown active…</div>
+        </div>
+        <div class="section">
+          <h4>Trade Metrics (per attempt)</h4>
+          <div id="tradeMetrics"></div>
+          <canvas id="mfeMaeChart"></canvas>
+          <div id="stopSuggest" class="progress-label">—</div>
+        </div>
+      </div>
+      <div>
+        <div class="section">
+          <h4>Review &amp; KPIs</h4>
+          <ul class="checklist" id="reviewList"></ul>
+          <div class="progress-label" id="lockoutMsg" style="display:none"></div>
+        </div>
+        <div class="section">
+          <h4>Notes</h4>
+          <textarea id="dayNotes" placeholder="Reflection: Keep / Change / Question. Paste images directly here."></textarea>
+          <div class="noteImages" id="noteImages"></div>
+        </div>
+        <div class="section">
+          <h4>Side Quests (Optional)</h4>
+          <ul class="checklist" id="sideList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Today Widget -->
+<div class="todayWidget" id="todayWidget" style="display:none">
+  <div class="todayHeader">
+    <h4 id="twTitle">Today</h4>
+    <div class="twMini">
+      <div class="bar"><div class="fill day" id="twFill"></div></div>
+      <div class="percent" id="twPct">0%</div>
+    </div>
+  </div>
+  <div class="twBody">
+    <div class="twRow">
+      <span class="progress-label" id="twDate">—</span>
+      <div class="inline" style="margin-left:auto">
+        <button class="btn small" id="twOpen">Open</button>
+        <button class="btn small ghost" id="twHide">Hide</button>
+      </div>
+    </div>
+    <ul class="twList" id="twList"></ul>
+  </div>
+</div>
+
+<script>
+/* Storage + schema */
+const APP_VERSION = 3;
+const StorageShim = (() => {
+  const mem = new Map(); let enabled = false;
+  try { const k="__tq__"+Math.random(); localStorage.setItem(k,"1"); localStorage.removeItem(k); enabled=true; } catch(e){ enabled=false; }
+  return { get enabled(){ return enabled; }, getItem:k=> enabled? localStorage.getItem(k) : (mem.has(k)? mem.get(k):null),
+    setItem:(k,v)=> enabled? localStorage.setItem(k,v) : mem.set(k,String(v)),
+    removeItem:k=> enabled? localStorage.removeItem(k) : mem.delete(k), clear:()=> enabled? localStorage.clear() : mem.clear() };
+})();
+function migrateSchema(){
+  const v = parseInt(StorageShim.getItem('tq_version')||'0',10);
+  if(v < 3){ if(!StorageShim.getItem('tq_theme')) StorageShim.setItem('tq_theme','dark'); }
+  StorageShim.setItem('tq_version', String(APP_VERSION));
+}
+migrateSchema();
+
+/* Helpers */
+function byId(id){ return document.getElementById(id); }
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!==undefined) e.innerHTML=html; return e; }
+function onAll(sel, fn){ document.querySelectorAll(sel).forEach(fn); }
+function formatDate(d){ return d.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'}); }
+function toISODate(d){ return d.toISOString().slice(0,10); }
+function addDays(date, days){ const d=new Date(date); d.setDate(d.getDate()+days); return d; }
+function todayISO(){ return toISODate(new Date()); }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+/* ICS */
+function icsEscape(s){ return s.replace(/[,;]/g, m => m===';'?'\\;':'\\,').replace(/\n/g,'\\n'); }
+function toICSDateTime(d){ const dt=new Date(d); const y=dt.getUTCFullYear(); const m=String(dt.getUTCMonth()+1).padStart(2,'0'); const da=String(dt.getUTCDate()).padStart(2,'0'); return `${y}${m}${da}T090000Z`; }
+function makeICSEvent({title, desc, startDate}){
+  const uid = Math.random().toString(36).slice(2) + "@traderquest";
+  const dtStart = toICSDateTime(startDate);
+  return ["BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:${toICSDateTime(new Date())}`, `DTSTART:${dtStart}`, `DTEND:${dtStart}`, `SUMMARY:${icsEscape(title)}`, `DESCRIPTION:${icsEscape(desc)}`, "END:VEVENT"].join("\r\n");
+}
+function download(filename, content, mime="text/plain"){
+  const blob = new Blob([content], {type:mime});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+
+/* Plan data (12×5=60) */
+function q(title, objective, learn, drills, trades, review, side){ return { title, objective, learn, drills, trades, review, side }; }
+const Plan = (() => {
+  const weeks = [
+    { name:"Week 1 — Execute Without Unforced Errors", days:[
+      q("Spreads, Liquidity, Slippage","Control costs; set execution rules.",
+        ["Read about spreads/liquidity/slippage; write 3 rules.","Watch 10–15 min on order book basics.","Set no-trade spread threshold + preferred order types."],
+        ["Record spread/depth/slippage for 3 instruments (open/midday/close).","Compare limit vs market fills; compute avg slippage."],
+        ["3 sim entries with limit vs market; OCO on exits."],
+        ["Toggle: Red card if widened stop (subtract progress).","Mark process adherence for the day (0–100%)."],
+        ["Create a liquidity whitelist of 10 symbols."]),
+      q("Orders + OCO","Standardize entry/exit safety.",
+        ["Review market/limit/stop-limit; OCO brackets.","Set default stop-limit offset policy."],
+        ["Sim 10 stop-limit entries; measure miss vs fill.","Test cancel-on-fill with OCO in sim."],
+        ["3 sim trades with OCO at entry; no widening."],
+        ["KPI: 100% OCO usage; set daily process %."],
+        ["Create hotkeys/macros for brackets."]),
+      q("Risk (R) and Sizing","Fix R and compute size precisely.",
+        ["Choose R (0.25–0.5%); document rule.","Review fee/slippage impact."],
+        ["Size 10 scenarios; round down; include fees."],
+        ["3 trades sized to R; actual loss ≤ 1.0R incl slippage."],
+        ["KPI: 100% sizing accuracy; process %."],
+        ["Build a quick sizing sheet."]),
+      q("Levels and Structure","Map prior H/L, premarket H/L, swings.",
+        ["Study OHLC and S/R mapping.","Define premarket level routine."],
+        ["Mark levels on 2 recent days for 3 tickers; screenshot."],
+        ["2 trades only at pre-marked levels; none mid-range."],
+        ["KPI: 100% at levels; process %."],
+        ["Add weekly levels and gap zones."]),
+      q("Opening Range and Patience","Trade only with confirmation.",
+        ["Learn 5m/15m OR; volume confirmation.","Define no-trade window (first 2–5 min)."],
+        ["Mark OR on 2 prior sessions; track outcomes."],
+        ["Max 2 ORB attempts; require volume + market alignment."],
+        ["KPI: OR drawn; process %."],
+        ["List ORB red flags."])
+    ]},
+    { name:"Week 2 — Structure + Setup #1 (EMA Pullback)", days:[
+      q("EMA Alignment","Execute one clean EMA pullback entry.",
+        ["Study 9/20 EMA; reversal candles.","Define invalidation + entry zone."],
+        ["Collect 5 pullback examples; annotate."],
+        ["Max 2 trades: pullback + reversal; stop beyond swing."],
+        ["KPI: In zone; process %."],
+        ["Grade examples A/B/C."]),
+      q("ATR Stops/Targets","Fit stops/targets to volatility.",
+        ["Compute ATR(14); stop=0.3–0.5x; target ≥2R.","Document trail condition."],
+        ["Apply ATR to 5 scenarios; check R/R."],
+        ["2 trades with ATR stops and 2R targets."],
+        ["KPI: 100% ATR stops; process %."],
+        ["Compare ATR across 5 tickers."]),
+      q("Level-First Entries","No mid-air trades.",
+        ["Review level library + reactions."],
+        ["Replay 2 sessions; annotate entry/avoid."],
+        ["2 trades only at marked levels; checklist before click."],
+        ["KPI: 100% at levels; process %."],
+        ["A+ level context one-pager."]),
+      q("Stop Behavior","MAE/MFE basics.",
+        ["Learn MAE/MFE method."],
+        ["Analyze 10 trades’ MAE/MFE."],
+        ["1–2 trades with refined stop distance."],
+        ["KPI: Noise stops reduced; process %."],
+        ["Rule for tighten/widen by MAE."]),
+      q("Weekly Review","Boss fight.",
+        ["Compile screenshots and stats."],
+        ["Top 3 errors; fix one."],
+        ["Optional trades."],
+        ["KPI: Compliance ≥85%; process %."],
+        ["Finalize setup #1 checklist."])
+    ]},
+    { name:"Week 3 — Consolidate Setup #1", days:[
+      q("Replay Trend Days","Improve entries/exits via replay.",
+        ["Replay 3 trend days."],
+        ["Mark ideal entries/exits; compare."],
+        ["1–2 trades max; obey checklist."],
+        ["KPI: 0 checklist misses; process %."],
+        ["Document 3 mistakes to avoid."]),
+      q("Exit A/B Test","Fixed vs trail.",
+        ["Define 2 exit methods."],
+        ["Backtest on examples; pick rule."],
+        ["2 trades applying chosen exit."],
+        ["KPI: Exit per plan; process %."],
+        ["Note MFE capture diff."]),
+      q("Time-of-Day Edge","Find prime window.",
+        ["Split stats by session blocks."],
+        ["Plan edge window; stand-down times."],
+        ["2 trades only in window."],
+        ["KPI: 100% in window; process %."],
+        ["Reset ritual defined."]),
+      q("Risk Lock-ins","Caps + lockouts.",
+        ["Write lockout protocol; set alerts."],
+        ["Sim −3R day; stop trading."],
+        ["1 trade max; if −1R stop."],
+        ["Toggle −3R lockout if applicable.","Process %."],
+        ["Red card rule enabled."]),
+      q("Week 3 Review","Consolidate setup #1.",
+        ["Expectancy over 15–25 trades."],
+        ["Keep one rule, change one."],
+        ["Optional trades."],
+        ["KPI: E ≥0R; process %."],
+        ["Freeze setup #1 rules."])
+    ]},
+    { name:"Week 4 — Setup #2 (Breakout + Retest)", days:[
+      q("RVOL + Catalyst","Improve watchlist quality.",
+        ["Study RVOL & catalysts."],
+        ["Build filtered watchlist."],
+        ["2 trades only in filtered names."],
+        ["KPI: 100% meet filter; process %."],
+        ["Map earnings/calendar."]),
+      q("Base and Break","Demand base + volume ramp.",
+        ["Study base length & failed breaks."],
+        ["Collect 6 examples; label volume."],
+        ["1–2 trades: prefer break + retest."],
+        ["KPI: No chase; process %."],
+        ["Fake-out red flags list."]),
+      q("Retest Entry","Buy the test, not the spike.",
+        ["Define triggers & invalidation."],
+        ["Practice entries at level."],
+        ["1–2 trades at retest; tight stop."],
+        ["KPI: R/R ≥1.5R; process %."],
+        ["Invalidation cues doc."]),
+      q("Exits for Setup #2","Next level; partials allowed.",
+        ["Define exit/partial rules."],
+        ["Backtest exits."],
+        ["1–2 trades applying exits."],
+        ["KPI: Exit per plan; process %."],
+        ["A/B criteria for setup #2."]),
+      q("Week 4 Review","Choose Core 2 setups.",
+        ["Expectancy per setup; choose Core 2."],
+        ["Consolidate both checklists."],
+        ["Optional trades."],
+        ["KPI: E ≥0R; process %."],
+        ["Playbook v1 frozen."])
+    ]},
+    { name:"Week 5 — Context: VWAP + Regime", days:[
+      q("VWAP Anchor","Align with VWAP in trend.",
+        ["Learn reclaim/reject/chop."],
+        ["Journal 6 VWAP interactions."],
+        ["2 trades aligned with VWAP side."],
+        ["KPI: 0 counter-trend impulses; process %."],
+        ["VWAP cheatsheet."]),
+      q("Regime Labeling","Trend vs chop; vol high/low.",
+        ["Define regime rules."],
+        ["Label last 10 sessions; tactics."],
+        ["2 trades matching regime or stand down."],
+        ["KPI: 100% labels; process %."],
+        ["Chop time-based exit rule."]),
+      q("Session Design","Trade only your window.",
+        ["Set focus blocks; breaks."],
+        ["Practice stand-down."],
+        ["2 trades in window only."],
+        ["KPI: 100% window adherence; process %."],
+        ["Conditions-right card."]),
+      q("Correlation & Beta","Avoid stacked risk.",
+        ["Learn correlation/beta."],
+        ["Compare name vs sector vs index."],
+        ["Max 1 correlated pos; size down beta."],
+        ["KPI: 0 overlap risk; process %."],
+        ["Correlation rules in checklist."]),
+      q("Week 5 Review","Context integration.",
+        ["Review results; adjust filters/targets."],
+        ["Optional trades."],
+        ["KPI: ≥85% compliance; process %."],
+        ["Playbook v1.1 update."])
+    ]},
+    { name:"Week 6 — Integrate Core 2", days:[
+      q("Checklists v1.2","Merge signals, exits, context.",
+        ["Finalize both setup checklists."],
+        ["Dry-run past charts."],
+        ["1–2 trades per setup max."],
+        ["KPI: 100% checklist adherence; process %."],
+        ["Red flags per setup."]),
+      q("Expectancy Review","Edge by setup/regime.",
+        ["Compute E by setup & regime."],
+        ["Spot avoid/press zones."],
+        ["1–2 trades where E best."],
+        ["KPI: Avoid low‑E contexts; process %."],
+        ["Do Not Trade contexts list."]),
+      q("Lockouts & Recovery","Battle tilt.",
+        ["Sim −3R day; enforce lockout."],
+        ["Define recovery rules."],
+        ["1 trade max."],
+        ["Toggle −3R lockout if hit; process %."],
+        ["Reset ritual checklist."]),
+      q("Week 6 Review","Gate to micro-live.",
+        ["Ensure ≥90% compliance; E ≥0R."],
+        ["Plan micro-live size."],
+        ["No trades or 1 sim."],
+        ["KPI: Ready to micro-live; process %."],
+        ["Playbook v1.2 saved."]),
+      q("Buffer/Practice","Flex day.",[],[],[],["Set process %."],[])
+    ]},
+    { name:"Week 7 — Micro-Live Calibration", days:[
+      q("Micro-Live Start","Replicate sim behavior small risk.",
+        ["Set live risk 0.1–0.2R; same rules."],
+        ["Track slippage vs sim."],
+        ["1–2 live trades; A setups only."],
+        ["KPI: ≥85% process; toggle red card if violated."],
+        ["Adjust offsets if needed."]),
+      q("Selectivity","No‑trade is a trade.",
+        ["Identify non-ideal regimes."],
+        ["Practice passing B/C setups."],
+        ["0–1 live trade only if ideal."],
+        ["KPI: 0 impulse trades; process %."],
+        ["Urge log."]),
+      q("Slippage Control","Fine-tune entries.",
+        ["Compare fills vs expected."],
+        ["Test small offset tweaks."],
+        ["1–2 trades with refined offsets."],
+        ["KPI: slippage drift ≤0.03R; process %."],
+        ["New default offset noted."]),
+      q("Review Live 1","Stress effects.",
+        ["Compare process vs sim."],
+        ["Identify one weak spot."],
+        ["Optional trade."],
+        ["KPI: ≥85% process; process %."],
+        ["Routine tweak added."]),
+      q("Week 7 Review","Keep micro-live.",
+        ["E ≥ −0.1R; compliance strong."],
+        ["Decide continue/pause."],
+        [],
+        ["KPI: Criteria met; process %."],
+        [])
+    ]},
+    { name:"Week 8 — Tighten Under Pressure", days:[
+      q("Checklist Discipline","Zero misses.",
+        ["Say checklist aloud."],
+        ["Record screen (optional)."],
+        ["1–2 trades max."],
+        ["KPI: 100% checklist coverage; process %."],
+        ["Condensed entry gate card."]),
+      q("No-Trade Day","Practice restraint.",
+        ["Plan stand-down day."],
+        ["Observe conditions; journal."],
+        [],
+        ["KPI: Stood down successfully; process %."],
+        ["How did it feel?"]),
+      q("Windows Only","Guard your edge.",
+        ["Trade only prime window."],
+        ["Set alarms for start/stop."],
+        ["1–2 trades."],
+        ["KPI: 100% window adherence; process %."],
+        ["Tune breaks and resets."]),
+      q("Review Live 2","Consistency check.",
+        ["Aggregate 10–15 live trades."],
+        ["Compute E; review MAE/MFE."],
+        ["Optional trade."],
+        ["KPI: E ≥ 0R; process %."],
+        ["Adjust exits if needed."]),
+      q("Week 8 Review","Gate to small size.",
+        ["Plan 0.25–0.5R if criteria met."],
+        [],
+        [],
+        ["KPI: Ready; process %."],
+        [])
+    ]},
+    { name:"Week 9 — Scale to Small", days:[
+      q("Size Up Safely","Increase to 0.25–0.5R.",
+        ["Confirm risk caps."],
+        ["Sim new size in replay."],
+        ["1–2 trades live small."],
+        ["KPI: 100% risk compliance; process %."],
+        ["Note emotions at larger size."]),
+      q("Exit Refinement","One enhancement only.",
+        ["Choose partials or trailing."],
+        ["Backtest change."],
+        ["Apply to 1–2 trades."],
+        ["KPI: Follow exit rule; process %."],
+        ["Log MFE capture."]),
+      q("Correlation Control","No stacking.",
+        ["Check sector/index alignment."],
+        ["Avoid double exposure."],
+        ["1–2 trades."],
+        ["KPI: 0 overlap risk; process %."],
+        ["Rule added to checklist."]),
+      q("Review Live 3","Edge maintenance.",
+        ["20–30 trade sample analysis."],
+        [],
+        ["Optional trade."],
+        ["KPI: E ≥ +0.1R/trade; process %."],
+        ["DD ≤ 8R."]),
+      q("Week 9 Review","Hold size/back off.",
+        ["Decide next week plan."],
+        [],
+        [],
+        ["KPI: Criteria met; process %."],
+        [])
+    ]},
+    { name:"Week 10 — Nuance & Events", days:[
+      q("Tape + Book","Confirm with prints.",
+        ["Learn absorption/refresh."],
+        ["Observe level battle."],
+        ["1–2 trades with tape confirm."],
+        ["KPI: No spoof traps; process %."],
+        ["Confirming cues noted."]),
+      q("Halts & Events","Policy and adherence.",
+        ["Read LULD; write policy."],
+        ["Sim a halt scenario."],
+        ["0–1 trades; no adding into halts."],
+        ["KPI: 0 violations; process %."],
+        ["Policy printed."]),
+      q("Chop vs Trend Exits","Time-based exits.",
+        ["Define chop rules."],
+        ["Backtest time-based stop/exit."],
+        ["Apply rules."],
+        ["KPI: Reduced give-back; process %."],
+        ["Exit matrix updated."]),
+      q("Review Nuance","Check edge drift.",
+        ["Audit last 10 trades."],
+        ["Remove complexity creep."],
+        ["Optional trade."],
+        ["KPI: Simplicity maintained; process %."],
+        ["Playbook update."]),
+      q("Week 10 Review","Stability check.",[],[],[],["KPI: On track; process %."],[])
+    ]},
+    { name:"Week 11 — Sharpen Exits", days:[
+      q("Trail Tuning","Capture more MFE.",
+        ["Analyze MFE distributions."],
+        ["Set trail trigger/step."],
+        ["1–2 trades with trail."],
+        ["KPI: Better MFE capture; process %."],
+        ["Rule documented."]),
+      q("Target Tuning","Adjust by vol.",
+        ["Map targets across vol regimes."],
+        ["Backtest target changes."],
+        ["Apply targets live."],
+        ["KPI: Targets fit vol; process %."],
+        ["Checklist updated."]),
+      q("Protect Green","Give-back control.",
+        ["Define break-even/partials."],
+        ["Sim give-back scenarios."],
+        ["1–2 trades with protections."],
+        ["KPI: Reduced give-back; process %."],
+        ["Impact on E noted."]),
+      q("Review Exits","Compare cohorts.",
+        ["Compare last 20 vs prior 20."],
+        [],
+        ["Optional trade."],
+        ["KPI: Exit improvement verified; process %."],
+        ["Keep better rule."]),
+      q("Week 11 Review","Consistency gate.",[],[],[],["KPI: On track; process %."],[])
+    ]},
+    { name:"Week 12 — Plan v2 + Readiness", days:[
+      q("Plan v2 Draft","Codify process & setups.",
+        ["Write Core 2, entries/stops/targets, context, risk caps, lockouts, scaling."],
+        ["Review clarity; remove ambiguity."],
+        ["Optional trades after plan done."],
+        ["KPI: Plan written; process %."],
+        ["Pin plan at desk."]),
+      q("Bad Week Drill","Resilience.",
+        ["Mock −6R week protocol; size cut; A+ only."],
+        ["Define re-entry criteria."],
+        ["0–1 trades."],
+        ["KPI: Protocol ready; process %."],
+        ["Checklist printed."]),
+      q("Graduation Review","Sample quality.",
+        ["40–60 trade sample analysis."],
+        ["Assess E, DD, compliance."],
+        ["Optional trade."],
+        ["KPI: E ≥ +0.2R/trade; DD ≤ 10R; process %."],
+        ["Sign off to scale small."]),
+      q("Plan v2 Final","Lock it in.",
+        ["Make last edits; version plan."],
+        ["Schedule monthly reviews."],
+        ["0 trades."],
+        ["KPI: Plan v2 complete; process %."],
+        ["Celebrate small win."]),
+      q("Buffer/Wrap","Reflection day.",[],[],[],["Set process %."],[])
+    ]}
+  ];
+  const flat=[]; let idx=1;
+  weeks.forEach((w,wi)=> w.days.forEach((d,di)=> flat.push({globalDay:idx++, weekIndex:wi, dayIndex:di, ...d})));
+  return {weeks, flat};
+})();
+
+/* Keys */
+const K = {
+  startDate: "tq_start_date",
+  theme: "tq_theme",
+  notes: d => `tq_notes_${d}`,
+  tasks: d => `tq_tasks_${d}`, // includes metrics, proc, rPnL, red, attempts, cooldownUntil, regime
+  goals: "tq_goals",
+  globalNotes: "tq_global_notes",
+  edge: "tq_edge_window",
+  lockoutFlag: d => `tq_lockout_${d}`,
+  focusWeek: w => `tq_focus_w${w}`,
+  snapshots: "tq_snapshots"
+};
+
+/* Theme */
+function applyTheme(v){ document.documentElement.setAttribute('data-theme', v||'dark'); [byId('themeSel'), byId('themeSel2')].forEach(s=>{ if(s) s.value = v; }); StorageShim.setItem(K.theme, v); }
+applyTheme(StorageShim.getItem(K.theme) || 'dark');
+byId('themeSel').addEventListener('change', e=> applyTheme(e.target.value));
+byId('themeSel2').addEventListener('change', e=> applyTheme(e.target.value));
+
+/* Navigation & keyboard */
+const views = { week: byId('view-week'), day: byId('view-day'), goals: byId('view-goals'), guide: byId('view-guide') };
+onAll('.tab', t => t.addEventListener('click', ()=> switchView(t.dataset.view)));
+onAll('.tabBtn', b => b.addEventListener('click', ()=> switchView(b.dataset.tab)));
+byId('printBtn').addEventListener('click', ()=> window.print());
+function switchView(name){
+  onAll('.tab', t=> t.classList.toggle('active', t.dataset.view===name));
+  Object.entries(views).forEach(([k,v])=> v.classList.toggle('active', k===name));
+  if(name==='day'){ byId('dailyProgressWrap').style.display='flex'; updateDailyHeader(); } else { byId('dailyProgressWrap').style.display='none'; }
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && dayView.style.display==='block'){ closeDay(); }
+  if(e.key==='f' && dayView.style.display==='block'){ e.preventDefault(); byId('toggleFS').click(); }
+  if(e.key===' ' && dayView.style.display==='block'){ e.preventDefault(); const next = document.querySelector('.daySheet .checklist input[type="checkbox"]:not(:checked)'); if(next){ next.click(); } }
+});
+let gPressed = false;
+document.addEventListener('keydown', e=>{
+  if(e.key==='g'){ gPressed = true; setTimeout(()=> gPressed=false, 600); }
+  else if(gPressed && e.key==='w'){ switchView('week'); gPressed=false; }
+  else if(gPressed && e.key==='d'){ switchView('day'); gPressed=false; }
+  else if(gPressed && e.key==='o'){ switchView('goals'); gPressed=false; }
+  else if(gPressed && (e.key==='h' || e.key==='H')){ switchView('guide'); gPressed=false; }
+});
+byId('qaWeek').addEventListener('click', ()=> { switchView('week'); autoSnapWeek(); });
+byId('qaDay').addEventListener('click', ()=> { switchView('day'); byId('todayBtn').click(); });
+
+/* Start date & scheduling */
+const startInput = byId('startDate');
+byId('applyStart').addEventListener('click', ()=> { const v=startInput.value; if(v){ StorageShim.setItem(K.startDate, v); renderAll(true); }});
+function getStartDate(){
+  let v = StorageShim.getItem(K.startDate);
+  if(!v){
+    const now = new Date(); const dow = now.getDay();
+    let start = new Date(now); if(dow===6) start = addDays(now,2); if(dow===0) start = addDays(now,1);
+    v = toISODate(start); StorageShim.setItem(K.startDate, v);
+  }
+  startInput.value = v; return v;
+}
+function dateForGlobalDay(n){
+  const start = new Date(getStartDate());
+  let s = new Date(start); const dow = s.getDay(); if(dow===6) s = addDays(s,2); if(dow===0) s = addDays(s,1);
+  const zeroBased = n-1; const weeksOffset = Math.floor(zeroBased/5); const dayInWeek = zeroBased%5;
+  return addDays(s, weeksOffset*7 + dayInWeek);
+}
+
+/* Weighted progress */
+const WEIGHTS = { learn:1, drills:1, trades:2, review:2, side:0.5 };
+const RED_PENALTY = 1;
+function loadDayState(d){ try{ const raw = StorageShim.getItem(K.tasks(d)); return raw? JSON.parse(raw): {}; }catch{ return {}; } }
+function saveDayState(d, s){ StorageShim.setItem(K.tasks(d), JSON.stringify(s)); }
+function ensureGroup(st, group, len){ if(!Array.isArray(st[group])) st[group]=new Array(len).fill(false); if(st[group].length !== len) st[group]=new Array(len).fill(false); }
+function dayCompletionWeighted(d){
+  const entry = Plan.flat.find(e=>e.globalDay===d);
+  const st = loadDayState(d);
+  const groups = ['learn','drills','trades','review','side'];
+  let totalW=0, doneW=0;
+  groups.forEach(g=>{
+    const len = entry[g]?.length || 0;
+    const weight = WEIGHTS[g] || 1;
+    totalW += len * weight;
+    const arr = Array.isArray(st[g]) ? st[g] : new Array(len).fill(false);
+    doneW += (arr.filter(Boolean).length) * weight;
+  });
+  if(st.red) doneW = Math.max(0, doneW - RED_PENALTY);
+  return {doneW, totalW};
+}
+function pctWeighted(d){ const {doneW,totalW} = dayCompletionWeighted(d); return totalW? Math.round(doneW/totalW*100) : 0; }
+
+/* Goals and reminders */
+const defaultGoals = [
+  "0 widened stops for 2 consecutive weeks",
+  "Process adherence ≥ 85% for 3 consecutive weeks",
+  "Expectancy ≥ +0.2R/trade over 40–60 trades",
+  "Max weekly drawdown ≤ 8R for a month",
+  "Two Core setups fully documented with A/B criteria",
+  "Micro-live slippage drift ≤ 0.03R average"
+];
+function loadGoals(){ try{ return JSON.parse(StorageShim.getItem(K.goals) || "[]"); }catch{ return []; } }
+function saveGoals(s){ StorageShim.setItem(K.goals, JSON.stringify(s)); }
+function renderGoals(){
+  const list = byId('goalsList'); list.innerHTML='';
+  const state = loadGoals();
+  defaultGoals.forEach((g,i)=>{
+    const li = document.createElement('li'); const id = `goal-${i}`;
+    li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${g}</label>`;
+    const cb = li.querySelector('input'); cb.checked = !!state[i];
+    cb.addEventListener('change', ()=>{ state[i]=cb.checked; saveGoals(state); updateTotalProgress(); });
+    list.appendChild(li);
+  });
+  const e = StorageShim.getItem(K.edge); let edge = null;
+  try{ edge = e ? JSON.parse(e) : null; }catch{ edge=null; }
+  byId('edgeStart').value = edge?.start || "09:15";
+  byId('edgeEnd').value = edge?.end || "11:30";
+  byId('edgeStart').addEventListener('change', saveEdge);
+  byId('edgeEnd').addEventListener('change', saveEdge);
+  byId('notifBtn').onclick = async ()=> {
+    try{
+      const perm = await Notification.requestPermission();
+      if(perm!=='granted'){ alert('Notifications not granted.'); return; }
+      scheduleEdgeReminder();
+      alert('Notifications enabled. You’ll get a reminder 15 minutes before your edge window.');
+    }catch(e){ alert('Notifications not supported.'); }
+  };
+  const lockSel = byId('lockDaySel'); lockSel.innerHTML='';
+  Plan.flat.forEach(e=>{ const opt=document.createElement('option'); opt.value=e.globalDay; opt.textContent=`Day ${e.globalDay} — ${e.title}`; lockSel.appendChild(opt); });
+  const updState = ()=> { const d=parseInt(lockSel.value,10); const on=isLockedOut(d); byId('lockState').textContent= on? 'Locked' : 'Unlocked'; byId('lockState').className = 'pill ' + (on?'red':'green'); }
+  updState();
+  byId('setLock').addEventListener('click', ()=>{ const d=parseInt(lockSel.value,10); setLockout(d, !isLockedOut(d)); updState(); renderDayList(); });
+}
+function saveEdge(){
+  const start = byId('edgeStart').value || "09:15";
+  const end = byId('edgeEnd').value || "11:30";
+  StorageShim.setItem(K.edge, JSON.stringify({start,end}));
+  scheduleEdgeReminder();
+}
+function scheduleEdgeReminder(){
+  try{
+    if(Notification.permission!=='granted') return;
+    const e = JSON.parse(StorageShim.getItem(K.edge) || "{}");
+    if(!e.start) return;
+    const [h,m] = e.start.split(':').map(Number);
+    const now = new Date(); const target = new Date();
+    target.setHours(h, Math.max(0,m-15), 0, 0);
+    if(target < now) return;
+    const timeout = target - now;
+    setTimeout(()=> new Notification("Edge window starts soon", { body: "15 minutes to your trading window. Prepare your checklist.", silent: false }), timeout);
+  }catch{}
+}
+
+/* Week scroller and lists */
+function renderQuestCard(globalDay, date){
+  const entry = Plan.flat.find(e=>e.globalDay===globalDay);
+  const div = el('div','quest');
+  const pct = pctWeighted(globalDay);
+  div.innerHTML = `<div class="meta">${formatDate(date)} • Day ${globalDay}</div>
+    <h3>${entry.title}</h3><div class="desc">${entry.objective}</div>
+    <div class="mini"><div class="bar"><div class="fill day" style="width:${pct}%"></div></div><div class="percent">${pct}%</div></div>`;
+  div.addEventListener('click', ()=> { if(isLockedOut(globalDay)){ alert('Locked due to −3R rule. Clear in Goals.'); return; } openDay(globalDay); });
+  return div;
+}
+function renderWeekScroller(){
+  const scroller = byId('weekScroller'); scroller.innerHTML = '';
+  Plan.weeks.forEach((week, wi) => {
+    const card = el('div','weekCard'); const h = el('h4', null, week.name); const inner = el('div','grid');
+    week.days.forEach((d, di)=>{
+      const gd = Plan.flat.find(f=>f.weekIndex===wi && f.dayIndex===di).globalDay;
+      inner.appendChild(renderQuestCard(gd, dateForGlobalDay(gd)));
+    });
+    card.appendChild(h); card.appendChild(inner); scroller.appendChild(card);
+  });
+  const card = scroller.querySelector('.weekCard');
+  const step = card ? (card.getBoundingClientRect().width + 12) : 320;
+  const left = byId('scrollLeft'), right = byId('scrollRight');
+  let holdTimer=null, holdInterval=null;
+  function startHold(dir){
+    stopHold(); scroller.scrollBy({left: dir*step, behavior:'smooth'});
+    holdTimer = setTimeout(()=> { holdInterval = setInterval(()=> scroller.scrollBy({left: dir*step, behavior:'smooth'}), 250); }, 350);
+  }
+  function stopHold(){ clearTimeout(holdTimer); clearInterval(holdInterval); holdTimer=null; holdInterval=null; }
+  ['pointerdown','mousedown','click'].forEach(ev=>{
+    left.addEventListener(ev, e=>{ e.preventDefault(); startHold(-1); });
+    right.addEventListener(ev, e=>{ e.preventDefault(); startHold(+1); });
+  });
+  ['pointerup','mouseup','mouseleave','touchend','blur'].forEach(ev=>{
+    left.addEventListener(ev, stopHold); right.addEventListener(ev, stopHold);
+  });
+  let isDown=false, startX=0, scrollLeftStart=0;
+  scroller.addEventListener('mousedown', e=>{ isDown=true; startX=e.pageX; scrollLeftStart=scroller.scrollLeft; e.preventDefault(); });
+  scroller.addEventListener('mouseleave', ()=> isDown=false);
+  scroller.addEventListener('mouseup', ()=> isDown=false);
+  scroller.addEventListener('mousemove', e=>{ if(!isDown) return; const dx = e.pageX - startX; scroller.scrollLeft = scrollLeftStart - dx; });
+  setTimeout(autoSnapWeek, 50);
+}
+function autoSnapWeek(){
+  const scroller = byId('weekScroller');
+  const i = getCurrentWeekIndex(); const target = scroller.children[i] || scroller.children[0];
+  if(target){ const offset = target.offsetLeft - 8; scroller.scrollTo({left: offset, behavior:'smooth'}); }
+}
+function getCurrentWeekIndex(){
+  const t = new Date();
+  for(let i=0;i<Plan.weeks.length;i++){
+    const firstGD = Plan.flat.find(f=>f.weekIndex===i && f.dayIndex===0).globalDay;
+    const lastGD = Plan.flat.find(f=>f.weekIndex===i && f.dayIndex===4).globalDay;
+    const startD = dateForGlobalDay(firstGD); const endD = dateForGlobalDay(lastGD);
+    if(t >= startD && t <= addDays(endD,1)) return i;
+    if(t < startD) return i;
+  }
+  return Plan.weeks.length-1;
+}
+function renderWeeksFullList(){
+  const host = byId('weeksFullList'); host.innerHTML = '';
+  Plan.weeks.forEach((w, wi)=>{
+    const sec = el('div','panel'); const h = el('h3', null, w.name); h.style.margin="0 0 8px";
+    const g = el('div','grid');
+    w.days.forEach((d, di)=>{
+      const gd = Plan.flat.find(f=>f.weekIndex===wi && f.dayIndex===di).globalDay;
+      g.appendChild(renderQuestCard(gd, dateForGlobalDay(gd)));
+    });
+    sec.appendChild(h); sec.appendChild(g); host.appendChild(sec);
+  });
+}
+byId('toggleWeeks').addEventListener('click', ()=>{
+  const p = byId('weeksFullPanel');
+  const hidden = p.style.display === 'none';
+  p.style.display = hidden ? 'block' : 'none';
+  byId('toggleWeeks').textContent = hidden ? 'Hide All Weeks' : 'Show All Weeks';
+});
+function renderCalendarList(){
+  const list = byId('calendarList'); list.innerHTML = '';
+  Plan.flat.forEach(entry=>{
+    const d = dateForGlobalDay(entry.globalDay); const pct = pctWeighted(entry.globalDay);
+    const row = el('div','dayRow'); row.innerHTML = `
+      <div class="date">${formatDate(d)}</div>
+      <div class="title">Day ${entry.globalDay}: ${entry.title}</div>
+      <div class="mini"><div class="bar"><div class="fill day" style="width:${pct}%"></div></div><div class="percent">${pct}%</div></div>
+      <button class="btn small" data-open="${entry.globalDay}">Open</button>`;
+    row.querySelector('button').addEventListener('click', ()=> openDay(entry.globalDay));
+    list.appendChild(row);
+  });
+}
+
+/* Day list with filters */
+const dayFilter = byId('dayFilter');
+dayFilter.addEventListener('change', ()=> renderDayList());
+function getDayStatus(pct){ if(pct===100) return 'completed'; return pct===0 ? 'not_started' : 'in_progress'; }
+function renderDayList(){
+  const container = byId('dayListFull'); container.innerHTML = '';
+  let counts = {all:0, completed:0, in_progress:0, not_started:0};
+  Plan.flat.forEach(entry=>{
+    const d = dateForGlobalDay(entry.globalDay);
+    const pct = pctWeighted(entry.globalDay);
+    const status = getDayStatus(pct);
+    counts.all++; counts[status]++;
+    if(dayFilter.value!=='all' && status!==dayFilter.value) return;
+
+    const locked = isLockedOut(entry.globalDay);
+    const row = el('div','dayRow' + (locked?' locked':'')); row.setAttribute('data-day', entry.globalDay);
+    row.innerHTML = `
+      <div class="date">${formatDate(d)}</div>
+      <div class="title">Day ${entry.globalDay}: ${entry.title} — ${entry.objective} ${locked?'<span class="lockMsg">(Locked: −3R lockout)</span>':''}</div>
+      <div class="mini"><div class="bar"><div class="fill day" style="width:${pct}%"></div></div><div class="percent">${pct}%</div></div>
+      <div class="inline">
+        <button class="btn small" data-ics="${entry.globalDay}">.ics</button>
+        <button class="btn small" data-open="${entry.globalDay}" ${locked?'disabled':''}>Open</button>
+      </div>`;
+    row.querySelector('[data-open]').addEventListener('click', ()=> openDay(entry.globalDay));
+    row.querySelector('[data-ics]').addEventListener('click', ()=>{
+      const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Trader Questline//EN",
+        makeICSEvent({title:`Quest Day ${entry.globalDay}: ${entry.title}`, desc:entry.objective, startDate: d}), "END:VCALENDAR"].join("\r\n");
+      download(`quest-day-${entry.globalDay}.ics`, ics, 'text/calendar');
+    });
+    container.appendChild(row);
+  });
+  byId('countsPill').textContent = `All ${counts.all} • ✓ ${counts.completed} • ▶ ${counts.in_progress} • ○ ${counts.not_started}`;
+}
+function renderDayPicker(){
+  const sel = byId('dayPicker'); sel.innerHTML='';
+  Plan.flat.forEach(e=>{
+    const d = dateForGlobalDay(e.globalDay);
+    const pct = pctWeighted(e.globalDay);
+    const opt = document.createElement('option'); opt.value = e.globalDay;
+    opt.textContent = `Day ${e.globalDay} — ${e.title} (${formatDate(d)}) [${pct}%]`; sel.appendChild(opt);
+  });
+}
+byId('openDay').addEventListener('click', ()=>{
+  const v = parseInt(byId('dayPicker').value,10); if(!v) return;
+  if(isLockedOut(v)){ alert('Locked due to −3R rule. Clear lockout in Goals after review.'); return; }
+  openDay(v);
+});
+byId('todayBtn').addEventListener('click', ()=>{
+  const entry = findTodayOrNext();
+  if(!entry) { alert('No scheduled day.'); return; }
+  if(isLockedOut(entry.globalDay)){ alert('Today locked by −3R rule. Clear in Goals after review.'); return; }
+  openDay(entry.globalDay);
+});
+byId('scrollToToday').addEventListener('click', ()=>{
+  const tISO = todayISO(); const list = byId('dayListFull'); let target=null;
+  for(const e of Plan.flat){ if(toISODate(dateForGlobalDay(e.globalDay))===tISO){ target = list.querySelector(`[data-day="${e.globalDay}"]`); break; } }
+  if(!target){ for(const e of Plan.flat){ if(dateForGlobalDay(e.globalDay) >= new Date()){ target = list.querySelector(`[data-day="${e.globalDay}"]`); break; } } }
+  if(target){ target.scrollIntoView({behavior:'smooth', block:'center'}); }
+});
+byId('icsDay').addEventListener('click', ()=>{
+  const v = parseInt(byId('dayPicker').value,10); if(!v) return;
+  const entry = Plan.flat.find(e=>e.globalDay===v); const date = dateForGlobalDay(v);
+  const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Trader Questline//EN", makeICSEvent({title:`Quest Day ${v}: ${entry.title}`, desc:entry.objective, startDate: date}), "END:VCALENDAR"].join("\r\n");
+  download(`quest-day-${v}.ics`, ics, 'text/calendar');
+});
+
+/* Lockout */
+function isLockedOut(day){ return StorageShim.getItem(K.lockoutFlag(day)) === '1'; }
+function setLockout(day, val){ if(val) StorageShim.setItem(K.lockoutFlag(day), '1'); else StorageShim.removeItem(K.lockoutFlag(day)); }
+
+/* Focus goals */
+const focusOptions = [
+  "Eliminate chase entries","Hit every pre-trade checklist","Perfect sizing (100% R adherence)","No widened stops",
+  "Trade only prime window","Improve exits (MFE capture)","Stand down in chop","Reduce slippage"
+];
+function renderFocusControls(){
+  const sel = byId('focusSel'); sel.innerHTML='';
+  focusOptions.forEach(x=>{ const opt=document.createElement('option'); opt.value=x; opt.textContent=x; sel.appendChild(opt); });
+  const ws = byId('reviewWeekSel'); ws.innerHTML='';
+  Plan.weeks.forEach((w, i)=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=`Week ${i+1} — ${w.name}`; ws.appendChild(opt); });
+  const cw = getCurrentWeekIndex();
+  ws.value = cw;
+  const stored = StorageShim.getItem(K.focusWeek(cw)) || '';
+  if(stored){ sel.value = stored; }
+  sel.onchange = ()=> { StorageShim.setItem(K.focusWeek(cw), sel.value); renderFocusPins(); };
+  byId('focusClear').onclick = ()=> { StorageShim.removeItem(K.focusWeek(cw)); renderFocusPins(); };
+  renderFocusPins();
+}
+function renderFocusPins(){
+  const cw = getCurrentWeekIndex();
+  const focus = StorageShim.getItem(K.focusWeek(cw)) || '—';
+  byId('focusNow').textContent = typeof focus==='string' ? focus : '—';
+  byId('focusPin').textContent = `Focus: ${focus}`;
+}
+
+/* Today widget */
+function findTodayOrNext(){
+  const t = new Date(); const tISO = toISODate(t);
+  for(const e of Plan.flat){ if(toISODate(dateForGlobalDay(e.globalDay))===tISO) return e; }
+  for(const e of Plan.flat){ if(dateForGlobalDay(e.globalDay) >= t) return e; }
+  return null;
+}
+function renderTodayBlock(){
+  const entry = findTodayOrNext();
+  byId('todayBlock').textContent = entry ? `Next: Day ${entry.globalDay} — ${entry.title} (${pctWeighted(entry.globalDay)}%)` : 'No quest scheduled.';
+}
+function renderTodayWidget(){
+  const widget = byId('todayWidget'); let entry = findTodayOrNext();
+  if(!entry){ widget.style.display='none'; return; }
+  widget.style.display = 'block';
+  const pct = pctWeighted(entry.globalDay);
+  byId('twTitle').textContent = `Day ${entry.globalDay}: ${entry.title}`;
+  byId('twDate').textContent = formatDate(dateForGlobalDay(entry.globalDay));
+  byId('twFill').style.width = pct + '%'; byId('twPct').textContent = pct + '%';
+  const tinyList = byId('twList'); tinyList.innerHTML = '';
+  const day = Plan.flat.find(e=>e.globalDay===entry.globalDay);
+  const all = [...(day.learn||[]).map((t,i)=>({g:'learn', t, i})), ...(day.drills||[]).map((t,i)=>({g:'drills', t, i})), ...(day.trades||[]).map((t,i)=>({g:'trades', t, i}))];
+  const st = loadDayState(entry.globalDay);
+  ['learn','drills','trades'].forEach(g=> ensureGroup(st, g, (day[g]||[]).length)); saveDayState(entry.globalDay, st);
+  all.slice(0,5).forEach(item=>{
+    const li = document.createElement('li'); const id = `tw-${item.g}-${item.i}`;
+    li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${item.t}</label>`;
+    const cb = li.querySelector('input'); cb.checked = !!st[item.g][item.i];
+    cb.addEventListener('change', ()=>{
+      st[item.g][item.i] = cb.checked; saveDayState(entry.globalDay, st);
+      postTaskUpdate(entry.globalDay);
+    });
+    tinyList.appendChild(li);
+  });
+  byId('twOpen').onclick = ()=> { if(isLockedOut(entry.globalDay)){ alert('Locked due to −3R rule. Clear in Goals.'); return; } openDay(entry.globalDay); };
+  byId('twHide').onclick = ()=> widget.style.display='none';
+}
+
+/* Day drawer */
+const dayView = byId('dayView'); const daySheet = byId('daySheet');
+const dsBadge = byId('daySheetBadge'); const dsTitle = byId('daySheetTitle');
+const objText = byId('objText');
+const learnList = byId('learnList'); const drillList = byId('drillList'); const tradeList = byId('tradeList');
+const reviewList = byId('reviewList'); const sideList = byId('sideList');
+const dayNotes = byId('dayNotes'); const noteImages = byId('noteImages');
+const attemptsLeftEl = byId('attemptsLeft'); const cooldownMsg = byId('cooldownMsg');
+const tradeMetrics = byId('tradeMetrics'); const mfeMaeCanvas = byId('mfeMaeChart'); const stopSuggest = byId('stopSuggest');
+
+byId('closeDay').addEventListener('click', closeDay);
+byId('printThis').addEventListener('click', ()=> window.print());
+byId('toggleFS').addEventListener('click', ()=> {
+  const isFS = daySheet.classList.toggle('fullscreen');
+  byId('toggleFS').textContent = isFS ? 'Exit Full Screen (f)' : 'Full Screen (f)';
+});
+byId('icsThis').addEventListener('click', ()=> {
+  if(!currentDay) return; const entry = Plan.flat.find(e=>e.globalDay===currentDay); const date = dateForGlobalDay(currentDay);
+  const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Trader Questline//EN", makeICSEvent({title:`Quest Day ${currentDay}: ${entry.title}`, desc:entry.objective, startDate: date}), "END:VCALENDAR"].join("\r\n");
+  download(`quest-day-${currentDay}.ics`, ics, 'text/calendar');
+});
+
+/* Regime helper */
+byId('rhSuggest').addEventListener('click', ()=>{
+  const gap = byId('rhGap').value; const br = byId('rhBreadth').value; const rv = byId('rhRvol').value;
+  let regime = 'Chop';
+  if((gap==='Gap Up' && br==='Strong') || (gap==='Gap Down' && br==='Weak')) regime = rv==='~1' ? 'Trend (moderate)' : 'Trend (strong)';
+  byId('rhOut').textContent = regime;
+  if(currentDay){ const st = loadDayState(currentDay); st.regime = regime; saveDayState(currentDay, st); updateDashboards(); }
+});
+
+let currentDay = null;
+function openDay(globalDay){
+  currentDay = globalDay;
+  const entry = Plan.flat.find(e=>e.globalDay===globalDay);
+  const date = dateForGlobalDay(globalDay);
+  dsBadge.textContent = `Day ${globalDay} • ${formatDate(date)}`;
+  dsTitle.textContent = entry.title;
+  objText.textContent = entry.objective;
+
+  renderTaskList(learnList, entry.learn||[], 'learn', globalDay);
+  renderTaskList(drillList, entry.drills||[], 'drills', globalDay);
+  renderTrades(entry.trades||[], globalDay);
+  renderReviewList(entry.review||[], globalDay);
+  renderTaskList(sideList, entry.side||[], 'side', globalDay);
+
+  dayNotes.value = StorageShim.getItem(K.notes(globalDay)) || '';
+  dayNotes.oninput = () => StorageShim.setItem(K.notes(globalDay), dayNotes.value);
+  dayNotes.onpaste = async (e)=>{
+    const items = e.clipboardData?.items || [];
+    for(const it of items){ if(it.type && it.type.startsWith('image/')){ const file = it.getAsFile(); const b64 = await fileToBase64(file); addImage(globalDay, b64); } }
+  };
+  loadImages(globalDay);
+
+  const lockMsg = byId('lockoutMsg');
+  if(isLockedOut(globalDay)) { lockMsg.style.display='block'; lockMsg.textContent = 'Locked by −3R rule. Do your recovery ritual, then clear lockout in Goals to proceed.'; }
+  else lockMsg.style.display='none';
+
+  dayView.style.display = 'block';
+  byId('dailyProgressWrap').style.display = 'flex';
+  renderFocusPins();
+  updateDailyHeader();
+  startIdleWatcher();
+}
+function closeDay(){
+  dayView.style.display = 'none';
+  daySheet.classList.remove('fullscreen');
+  byId('toggleFS').textContent = 'Full Screen (f)';
+  byId('dailyProgressWrap').style.display = 'none';
+  stopIdleWatcher();
+}
+function renderTaskList(container, items, group, d){
+  container.innerHTML='';
+  const st = loadDayState(d);
+  ensureGroup(st, group, items.length);
+  saveDayState(d, st);
+  items.forEach((text,i)=>{
+    const li = document.createElement('li'); const id = `${group}-${d}-${i}`;
+    li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${text}</label>`;
+    const cb = li.querySelector('input'); cb.checked = !!st[group][i];
+    cb.addEventListener('change', ()=>{
+      st[group][i] = cb.checked; saveDayState(d, st);
+      postTaskUpdate(d);
+    });
+    container.appendChild(li);
+  });
+}
+
+/* Trades with cooldown + attempts + setup tagging + MFE/MAE inputs */
+function renderTrades(items, d){
+  tradeList.innerHTML='';
+  const st = loadDayState(d);
+  ensureGroup(st, 'trades', items.length);
+  if(typeof st.attempts!=='number') st.attempts = 0;
+  if(!Array.isArray(st.metrics)) st.metrics = [];
+  st.metrics = st.metrics.slice(0, items.length).concat(new Array(Math.max(0, items.length - st.metrics.length)).fill(null));
+  saveDayState(d, st);
+  attemptsLeftEl.textContent = String(Math.max(0, 2 - st.attempts));
+
+  items.forEach((text,i)=>{
+    const li = document.createElement('li'); const id = `trades-${d}-${i}`;
+    li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${text}</label>
+      <select data-setup="${i}" title="Setup"><option value="">— setup —</option><option value="A">Setup A</option><option value="B">Setup B</option></select>
+      <span class="cooldown" data-cdmsg="${i}" style="display:none">Cooldown…</span>`;
+    const cb = li.querySelector('input'); cb.checked = !!st.trades[i];
+    const setupSel = li.querySelector('select');
+    setupSel.value = st.metrics[i]?.setup || "";
+    setupSel.addEventListener('change', ()=>{ st.metrics[i] = st.metrics[i]||{}; st.metrics[i].setup=setupSel.value; saveDayState(d, st); updateDashboards(); });
+
+    cb.addEventListener('change', ()=>{
+      if(!withinEdgeWindow() && cb.checked){
+        const ok = prompt("You’re outside your trading window. Type a reason to override:") || "";
+        if(!ok.trim()){ cb.checked=false; return; }
+      }
+      if(cb.checked){
+        if(st.attempts >= 2){
+          const override = prompt("You reached 2 attempts. Type a reason for override:") || "";
+          if(!override.trim()){ cb.checked=false; return; }
+        } else {
+          st.attempts += 1;
+          attemptsLeftEl.textContent = String(Math.max(0, 2 - st.attempts));
+        }
+        const until = Date.now() + 20000;
+        st.cooldownUntil = until;
+        showCooldown(i, until);
+      }
+      st.trades[i] = cb.checked; saveDayState(d, st); postTaskUpdate(d); renderTradeMetrics(items.length, d);
+    });
+    tradeList.appendChild(li);
+  });
+  renderTradeMetrics(items.length, d);
+  if(st.cooldownUntil && st.cooldownUntil > Date.now()){ showCooldown('all', st.cooldownUntil); }
+}
+function showCooldown(i, until){
+  cooldownMsg.style.display = 'block';
+  const tick = ()=>{
+    const left = Math.max(0, until - Date.now());
+    cooldownMsg.textContent = `Cooldown: ${Math.ceil(left/1000)}s`;
+    if(left<=0){ cooldownMsg.style.display='none'; clearInterval(tid);}
+  };
+  tick(); const tid = setInterval(tick, 250);
+  const msgs = tradeList.querySelectorAll('[data-cdmsg]');
+  msgs.forEach(el=> el.style.display='inline');
+  setTimeout(()=> msgs.forEach(el=> el.style.display='none'), Math.max(0, until - Date.now()));
+}
+function renderTradeMetrics(n, d){
+  tradeMetrics.innerHTML='';
+  const st = loadDayState(d);
+  for(let i=0;i<n;i++){
+    const row = document.createElement('div'); row.className='inline';
+    const m = st.metrics[i] || {};
+    row.innerHTML = `
+      <span class="progress-label">#${i+1}</span>
+      <label class="progress-label">Setup</label>
+      <select data-ms-setup="${i}">
+        <option value="">—</option><option value="A">A</option><option value="B">B</option>
+      </select>
+      <label class="progress-label">Planned R</label>
+      <input type="number" step="0.1" style="width:80px" data-ms-pr="${i}">
+      <label class="progress-label">MAE</label>
+      <input type="number" step="0.1" style="width:80px" data-ms-mae="${i}">
+      <label class="progress-label">MFE</label>
+      <input type="number" step="0.1" style="width:80px" data-ms-mfe="${i}">
+      <label class="progress-label">Result R</label>
+      <input type="number" step="0.1" style="width:80px" data-ms-res="${i}">
+    `;
+    tradeMetrics.appendChild(row);
+    row.querySelector(`[data-ms-setup="${i}"]`).value = m.setup || "";
+    row.querySelector(`[data-ms-pr="${i}"]`).value = m.plannedR ?? '';
+    row.querySelector(`[data-ms-mae="${i}"]`).value = m.MAE ?? '';
+    row.querySelector(`[data-ms-mfe="${i}"]`).value = m.MFE ?? '';
+    row.querySelector(`[data-ms-res="${i}"]`).value = m.resultR ?? '';
+    row.querySelectorAll('select,input').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const idx = parseInt(inp.getAttribute('data-ms-setup')|| inp.getAttribute('data-ms-pr') || inp.getAttribute('data-ms-mae') || inp.getAttribute('data-ms-mfe') || inp.getAttribute('data-ms-res'),10);
+        st.metrics[idx] = st.metrics[idx]||{};
+        st.metrics[idx].setup = row.querySelector(`[data-ms-setup="${idx}"]`).value || "";
+        st.metrics[idx].plannedR = parseFloat(row.querySelector(`[data-ms-pr="${idx}"]`).value || '0');
+        st.metrics[idx].MAE = parseFloat(row.querySelector(`[data-ms-mae="${idx}"]`).value || '0');
+        st.metrics[idx].MFE = parseFloat(row.querySelector(`[data-ms-mfe="${idx}"]`).value || '0');
+        st.metrics[idx].resultR = parseFloat(row.querySelector(`[data-ms-res="${idx}"]`).value || '0');
+        saveDayState(d, st);
+        drawMfeMae(d); updateDashboards(); suggestStops(d);
+      });
+    });
+  }
+  drawMfeMae(d); suggestStops(d);
+}
+function drawMfeMae(d){
+  const ctx = mfeMaeCanvas.getContext('2d'); const w=mfeMaeCanvas.width=mfeMaeCanvas.clientWidth; const h=mfeMaeCanvas.height = mfeMaeCanvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  const st = loadDayState(d);
+  const pts = (st.metrics||[]).filter(m=>m && (isFinite(m.MAE)||isFinite(m.MFE)));
+  if(!pts.length){ ctx.fillStyle='#888'; ctx.fillText('Add MAE/MFE to see plot', 8, 14); return; }
+  const maxAbs = Math.max(1, ...pts.map(m=>Math.abs(m.MAE||0)), ...pts.map(m=>Math.abs(m.MFE||0)));
+  const pad=20; function mapX(v){ return pad + ( (v+maxAbs)/(2*maxAbs) )*(w-2*pad); } function mapY(v){ return h - pad - ( (v+maxAbs)/(2*maxAbs) )*(h-2*pad); }
+  ctx.strokeStyle='#666'; ctx.beginPath(); ctx.moveTo(mapX(0), pad); ctx.lineTo(mapX(0), h-pad); ctx.moveTo(pad, mapY(0)); ctx.lineTo(w-pad, mapY(0)); ctx.stroke();
+  pts.forEach(m=>{
+    const x = mapX(m.MAE||0); const y = mapY(m.MFE||0);
+    ctx.fillStyle = (m.setup==='A') ? '#7bdff2' : (m.setup==='B') ? '#b28dff' : '#aaa';
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+  });
+}
+function suggestStops(d){
+  const st = loadDayState(d);
+  const pts = (st.metrics||[]).filter(m=>m && isFinite(m.MAE));
+  if(!pts.length){ stopSuggest.textContent='—'; return; }
+  const maes = pts.map(m=>Math.abs(m.MAE||0)).sort((a,b)=>a-b);
+  const p60 = maes[Math.floor(0.6*maes.length)] || 0;
+  const p80 = maes[Math.floor(0.8*maes.length)] || 0;
+  stopSuggest.textContent = `Hint: 60th pct MAE ≈ ${p60.toFixed(2)}R; 80th pct ≈ ${p80.toFixed(2)}R. Consider stop in ${p60.toFixed(2)}–${p80.toFixed(2)}R zone.`;
+}
+
+/* Review */
+function renderReviewList(items, d){
+  reviewList.innerHTML = '';
+  const st = loadDayState(d);
+  ensureGroup(st, 'review', items.length);
+  const procWrap = document.createElement('li');
+  procWrap.innerHTML = `<label style="flex:1">Process adherence (% today)</label><input type="number" min="0" max="100" step="1" id="procInput" style="width:96px">`;
+  const procInput = procWrap.querySelector('#procInput'); procInput.value = st.proc ?? '';
+  procInput.addEventListener('change', ()=>{ st.proc = clamp(parseInt(procInput.value||'0',10),0,100); saveDayState(d, st); updateDashboards(); snapshot(); });
+  reviewList.appendChild(procWrap);
+  const rWrap = document.createElement('li');
+  rWrap.innerHTML = `<label style="flex:1">Result (R) for the day</label><input type="number" step="0.1" id="rInput" style="width:96px">`;
+  const rInput = rWrap.querySelector('#rInput'); rInput.value = st.rPnL ?? '';
+  rInput.addEventListener('change', ()=>{ st.rPnL = parseFloat(rInput.value || '0'); saveDayState(d, st); updateDashboards(); snapshot(); });
+  reviewList.appendChild(rWrap);
+  const redWrap = document.createElement('li');
+  redWrap.innerHTML = `<input type="checkbox" id="redCard"><label for="redCard">Red card (widened stop/revenge trade) — penalty applies</label>`;
+  const red = redWrap.querySelector('#redCard'); red.checked = !!st.red;
+  red.addEventListener('change', ()=>{ st.red = red.checked; saveDayState(d, st); postTaskUpdate(d); snapshot(); });
+  reviewList.appendChild(redWrap);
+  const lockWrap = document.createElement('li');
+  lockWrap.innerHTML = `<input type="checkbox" id="lockChk"><label for="lockChk">Set −3R lockout for next day (enforces pause)</label>`;
+  const lockChk = lockWrap.querySelector('#lockChk'); lockChk.checked = isLockedOut(d+1);
+  lockChk.addEventListener('change', ()=>{ setLockout(d+1, lockChk.checked); renderDayList(); snapshot(); });
+  reviewList.appendChild(lockWrap);
+  items.forEach((text,i)=>{
+    const li = document.createElement('li'); const id = `review-${d}-${i}`;
+    li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${text}</label>`;
+    const cb = li.querySelector('input'); cb.checked = !!st.review[i];
+    cb.addEventListener('change', ()=>{ st.review[i]=cb.checked; saveDayState(d, st); postTaskUpdate(d); });
+    reviewList.appendChild(li);
+  });
+}
+
+/* Idle watcher */
+let idleTimer=null;
+function startIdleWatcher(){
+  clearTimeout(idleTimer);
+  const ping = ()=> {
+    if(withinEdgeWindow()){
+      try{ if(Notification.permission==='granted'){ new Notification("Refocus", { body: "Idle during trading window. Re-center and check your list.", silent:false }); } }catch{}
+    }
+  }
+  const reset = ()=> { clearTimeout(idleTimer); idleTimer = setTimeout(ping, 45*60*1000); }
+  ['mousemove','keydown','click','scroll'].forEach(evt=> document.addEventListener(evt, reset, {once:false}));
+  reset();
+}
+function stopIdleWatcher(){ clearTimeout(idleTimer); idleTimer=null; }
+function withinEdgeWindow(){
+  try{
+    const e = JSON.parse(StorageShim.getItem(K.edge) || "{}");
+    if(!e.start || !e.end) return true;
+    const now = new Date(); const [sh,sm]=e.start.split(':').map(Number); const [eh,em]=e.end.split(':').map(Number);
+    const s = new Date(); s.setHours(sh,sm,0,0); const en=new Date(); en.setHours(eh,em,0,0);
+    return now>=s && now<=en;
+  }catch{ return true; }
+}
+
+/* Notes images */
+function fileToBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function imgKey(d){ return `tq_imgs_${d}`; }
+function addImage(d, b64){
+  const raw = StorageShim.getItem(imgKey(d)); let arr=[]; try{ arr = raw? JSON.parse(raw): []; }catch{ arr=[]; }
+  arr.push(b64); StorageShim.setItem(imgKey(d), JSON.stringify(arr)); loadImages(d);
+}
+function loadImages(d){
+  noteImages.innerHTML = '';
+  try{
+    const arr = JSON.parse(StorageShim.getItem(imgKey(d)) || "[]");
+    arr.forEach((src, idx)=>{
+      const wrap = document.createElement('div'); wrap.style.position='relative';
+      const img = new Image(); img.src = src; img.alt = `note-${idx}`; wrap.appendChild(img);
+      const del = document.createElement('button'); del.textContent='×'; del.className='btn small round'; del.style.position='absolute'; del.style.top='-8px'; del.style.right='-8px';
+      del.onclick = ()=>{
+        const arr2 = JSON.parse(StorageShim.getItem(imgKey(d)) || "[]");
+        arr2.splice(idx,1); StorageShim.setItem(imgKey(d), JSON.stringify(arr2)); loadImages(d);
+      };
+      wrap.appendChild(del);
+      noteImages.appendChild(wrap);
+    });
+  }catch{}
+}
+
+/* Progress bars */
+function updateDailyHeader(){
+  if(!currentDay){ byId('dailyProgressWrap').style.display='none'; return; }
+  const pct = pctWeighted(currentDay);
+  byId('dailyFill').style.width = pct + '%'; byId('dailyPct').textContent = pct + '%';
+  const mf = byId('miniDayFill'); if(mf) mf.style.width = pct + '%';
+  const mp = byId('miniDayPct'); if(mp) mp.textContent = pct + '%';
+  byId('dailyProgressLabel').textContent = `Day ${currentDay} progress: ${pct}% (weighted)`;
+  const ml = byId('miniDayLabel'); if(ml) ml.textContent = `Day ${currentDay} progress: ${pct}%`;
+}
+function updateTotalProgress(){
+  let done=0, total=0;
+  Plan.flat.forEach(e=> { const dc = dayCompletionWeighted(e.globalDay); done += dc.doneW; total += dc.totalW; });
+  const goals = loadGoals(); total += defaultGoals.length; done += goals.filter(Boolean).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  byId('totalFill').style.width = pct + '%'; byId('totalPct').textContent = pct + '%';
+  byId('totalProgressLabel').textContent = `Total progress: ${Math.round(done)} of ${Math.round(total)} (weighted)`;
+}
+
+/* Dashboard */
+function drawLine(canvas, points, color){
+  const ctx = canvas.getContext('2d'); const w=canvas.width = canvas.clientWidth; const h=canvas.height = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath();
+  if(points.length===0){ ctx.fillStyle='#888'; ctx.fillText('—', 8, 14); return; }
+  const xStep = w / Math.max(1, points.length-1);
+  const ys = points.map(p=>p.y); const min = Math.min(...ys, 0); const max = Math.max(...ys, 1);
+  function mapY(v){ const pad=8; return h - pad - ((v - min) / Math.max(1e-6, (max-min))) * (h-2*pad); }
+  points.forEach((p,i)=>{ const x=i*xStep; const y=mapY(p.y); i? ctx.lineTo(x,y): ctx.moveTo(x,y); }); ctx.stroke();
+  ctx.fillStyle='#888'; ctx.font='12px sans-serif'; ctx.fillText(`${min.toFixed(1)} … ${max.toFixed(1)}`, 8, 14);
+}
+function updateDashboards(){
+  const proc = []; Plan.flat.forEach(e=> { const st = loadDayState(e.globalDay); if(typeof st.proc==='number'){ proc.push({x:e.globalDay, y: st.proc}); } });
+  drawLine(byId('processChart'), proc.slice(-7), '#7bdff2');
+  const eq = []; let cum=0; Plan.flat.forEach(e=> { const st = loadDayState(e.globalDay); if(typeof st.rPnL==='number'){ cum += st.rPnL; eq.push({x:e.globalDay, y:cum}); } });
+  drawLine(byId('equityChart'), eq, '#7bd88f');
+  const setup = { A:[], B:[] }; const regime = { Trend:[], Chop:[] };
+  Plan.flat.forEach(e=>{
+    const st = loadDayState(e.globalDay);
+    (st.metrics||[]).forEach(m=>{ if(m && typeof m.resultR==='number'){ if(m.setup==='A') setup.A.push(m.resultR); if(m.setup==='B') setup.B.push(m.resultR); } });
+    if(typeof st.rPnL==='number'){
+      if((st.regime||'').toLowerCase().includes('trend')) regime.Trend.push(st.rPnL); else if((st.regime||'').toLowerCase().includes('chop')) regime.Chop.push(st.rPnL);
+    }
+  });
+  const avg = arr => arr.length? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2):'—';
+  byId('cohortSetup').textContent = `Setup A: ${avg(setup.A)} R/trade • Setup B: ${avg(setup.B)} R/trade`;
+  byId('cohortRegime').textContent = `Trend: ${avg(regime.Trend)} R/day • Chop: ${avg(regime.Chop)} R/day`;
+}
+
+/* Weekly review */
+byId('genReview').addEventListener('click', ()=>{
+  const wi = parseInt(byId('reviewWeekSel').value,10);
+  const firstGD = Plan.flat.find(f=>f.weekIndex===wi && f.dayIndex===0).globalDay;
+  const lastGD = Plan.flat.find(f=>f.weekIndex===wi && f.dayIndex===4).globalDay;
+  let days=[]; for(let d=firstGD; d<=lastGD; d++){ days.push(d); }
+  const procAvg = (()=>{ const vals = days.map(d=> loadDayState(d).proc).filter(v=>typeof v==='number'); return vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—'; })();
+  const eq = days.map(d=> loadDayState(d).rPnL || 0); const sumR = eq.reduce((a,b)=>a+b,0).toFixed(2);
+  const best = days.map(d=>({d, r: loadDayState(d).rPnL||0})).sort((a,b)=>b.r-a.r)[0];
+  const worst = days.map(d=>({d, r: loadDayState(d).rPnL||0})).sort((a,b)=>a.r-b.r)[0];
+  const breaches = []; days.forEach(d=>{ const st=loadDayState(d); if(st.red) breaches.push(`Day ${d}: Red card`); if(isLockedOut(d+1)) breaches.push(`Day ${d}: −3R lockout set`); });
+  const html = `
+    <div class="panel">
+      <h4>Week ${wi+1}: ${Plan.weeks[wi].name}</h4>
+      <div>Process avg: <b>${procAvg}%</b> • Net R: <b>${sumR}</b></div>
+      <div>Best day: ${best? `Day ${best.d} (${best.r.toFixed(2)}R)` : '—'} • Worst day: ${worst? `Day ${worst.d} (${worst.r.toFixed(2)}R)` : '—'}</div>
+      <div>Breaches: ${breaches.length? breaches.join(', ') : 'None'}</div>
+      <div style="margin-top:6px">Focus next week: <i>${StorageShim.getItem(K.focusWeek(wi))||'—'}</i></div>
+      <ol>${days.map(d=> `<li>Day ${d} — ${Plan.flat.find(x=>x.globalDay===d).title}: Process ${loadDayState(d).proc??'—'}%, R=${(loadDayState(d).rPnL??'—')}</li>`).join('')}</ol>
+    </div>`;
+  byId('reviewOutput').innerHTML = html;
+});
+byId('printReview').addEventListener('click', ()=> window.print());
+
+/* Print & backup */
+byId('printWeek').addEventListener('click', ()=> window.print());
+byId('printDay').addEventListener('click', ()=> { if(!currentDay){ alert('Open a day first.'); return; } window.print(); });
+byId('backupJSON').addEventListener('click', ()=> downloadBackupJSON());
+byId('importJSON').addEventListener('click', ()=> byId('restoreJSON').click());
+byId('restoreJSON').addEventListener('change', ev=>{
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.startDate) StorageShim.setItem(K.startDate, data.startDate);
+      if(data.globalNotes!=null) StorageShim.setItem(K.globalNotes, data.globalNotes);
+      if(data.edge!=null) StorageShim.setItem(K.edge, data.edge);
+      if(Array.isArray(data.goals)) saveGoals(data.goals);
+      if(Array.isArray(data.days)){
+        data.days.forEach(rec=>{
+          if(rec.tasks!=null) StorageShim.setItem(K.tasks(rec.d), rec.tasks);
+          if(rec.notes!=null) StorageShim.setItem(K.notes(rec.d), rec.notes);
+          if(rec.imgs!=null) StorageShim.setItem(`tq_imgs_${rec.d}`, rec.imgs);
+        });
+      }
+      renderAll(true); alert('Progress imported.');
+    }catch(e){ alert('Invalid JSON.'); }
+  };
+  reader.readAsText(file);
+});
+function downloadBackupJSON(){
+  const payload = {
+    version: APP_VERSION,
+    startDate: StorageShim.getItem(K.startDate),
+    theme: StorageShim.getItem(K.theme),
+    globalNotes: StorageShim.getItem(K.globalNotes),
+    edge: StorageShim.getItem(K.edge),
+    goals: loadGoals(),
+    focus: Array.from({length:12},(_,i)=> StorageShim.getItem(K.focusWeek(i))||null),
+    days: Plan.flat.map(e=> ({ d:e.globalDay, tasks: StorageShim.getItem(K.tasks(e.globalDay)), notes: StorageShim.getItem(K.notes(e.globalDay)), imgs: StorageShim.getItem(`tq_imgs_${e.globalDay}`) }))
+  };
+  download('trader-questline-progress.json', JSON.stringify(payload,null,2), 'application/json');
+}
+
+/* WebDAV push (optional) */
+byId('davPush').addEventListener('click', async ()=>{
+  try{
+    const url = byId('davUrl').value.trim(); const user = byId('davUser').value.trim(); const pass = byId('davPass').value;
+    if(!url) return alert('Enter WebDAV URL.');
+    const data = new Blob([JSON.stringify(JSON.parse(localStorageToJSON()),null,2)], {type:'application/json'});
+    const headers = { 'Content-Type':'application/json' };
+    if(user) headers['Authorization'] = `Basic ${btoa(`${user}:${pass}`)}`;
+    const res = await fetch(url.replace(/\/?$/,'') + `/trader-questline-backup-${Date.now()}.json`, { method:'PUT', body: data, headers, credentials:'omit', cache:'no-store', mode:'cors' });
+    if(!res.ok) throw new Error(res.statusText);
+    alert('Backup pushed to WebDAV.');
+  }catch(e){ alert('WebDAV push failed (browser CORS may block direct DAV). Use JSON export if needed.'); }
+});
+function localStorageToJSON(){
+  const obj={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); obj[k]=localStorage.getItem(k); } return JSON.stringify(obj);
+}
+
+/* Storage health */
+function updateStorageHealth(){
+  let used = 0; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); used += (k.length + (localStorage.getItem(k)||'').length); } }catch{}
+  const kb = (used/1024).toFixed(1);
+  byId('quotaInfo').textContent = `Storage ~${kb} KB`;
+  const warn = used > 4.5*1024*1024;
+  byId('storageHealth').textContent = warn ? 'Storage near quota. Consider downscaling images or exporting.' : 'Storage OK.';
+}
+byId('downscaleImgs').addEventListener('click', async ()=>{
+  const scaleTo = 640;
+  for(const e of Plan.flat){
+    const key = `tq_imgs_${e.globalDay}`;
+    try{
+      const arr = JSON.parse(StorageShim.getItem(key)||'[]');
+      const out = [];
+      for(const src of arr){ out.push(await downscaleImage(src, scaleTo)); }
+      StorageShim.setItem(key, JSON.stringify(out));
+    }catch{}
+  }
+  updateStorageHealth(); alert('Downscale complete.');
+});
+async function downscaleImage(src, maxW){
+  return new Promise((res)=>{
+    const img = new Image(); img.onload=()=>{
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width*scale); canvas.height = Math.round(img.height*scale);
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      res(canvas.toDataURL('image/jpeg', 0.8));
+    }; img.src = src;
+  });
+}
+
+/* Snapshot timeline */
+function snapshot(){
+  try{
+    const raw = StorageShim.getItem(K.snapshots); const arr = raw ? JSON.parse(raw) : [];
+    arr.push({ ts: Date.now(), day: currentDay, st: loadDayState(currentDay) });
+    StorageShim.setItem(K.snapshots, JSON.stringify(arr.slice(-200)));
+  }catch{}
+}
+
+/* Guide content (glossary + search) */
+const GLOSSARY = [
+  ["ATR","Average True Range; a volatility measure used for stops/targets sizing."],
+  ["Break-even","Exit point where a trade neither gains nor loses."],
+  ["Chop","Sideways market with low directional edge; adapt exits/time‑based rules."],
+  ["DD","Drawdown; peak-to-trough equity decline, measured in R."],
+  ["EMA","Exponential Moving Average; used for trend/pullback context."],
+  ["Equity curve","Cumulative sum of Result (R) across days."],
+  ["Expectancy","Average result per trade in R; E = Avg win × Win rate − Avg loss × Loss rate."],
+  ["Edge window","Your time-of-day block with best performance; app can enforce friction outside it."],
+  ["ICS",".ics calendar file; you can export days or the full plan."],
+  ["Lockout","Next day blocked after −3R; cleared in Goals after recovery ritual."],
+  ["MAE","Maximum Adverse Excursion; max unrealized loss vs entry, in R."],
+  ["MFE","Maximum Favorable Excursion; max unrealized gain vs entry, in R."],
+  ["OCO","One‑Cancels‑Other order; protective bracket for stops/targets."],
+  ["ORB","Opening Range Breakout; a common open setup; confirmation preferred."],
+  ["Process %","Your daily checklist compliance percentage."],
+  ["R","Risk unit; standardized sizing anchor (e.g., 1R loss equals your predefined risk)."],
+  ["Red card","Discipline violation (e.g., widened stop); applies a progress penalty."],
+  ["Regime","Market condition label, e.g., Trend or Chop, used for cohort analysis."],
+  ["RVOL","Relative Volume; current volume vs average; helps filter watchlist."],
+  ["Setup A/B","Your two core setups; tag attempts for cohort expectancy."],
+  ["Slippage","Fill price difference vs expected; track drift in R."],
+  ["Stop hint","MAE distribution‑based suggestion for noise‑resistant stops."],
+  ["VWAP","Volume Weighted Average Price; intraday anchor for bias."]
+];
+function renderGlossary(){
+  const host = byId('glossaryList'); host.innerHTML='';
+  const toc = byId('tocGlossary'); toc.innerHTML = '';
+  const grouped = {};
+  GLOSSARY.forEach(([t, d])=>{
+    const letter = t[0].toUpperCase(); if(!grouped[letter]) grouped[letter]=[]; grouped[letter].push([t,d]);
+  });
+  Object.keys(grouped).sort().forEach(L=>{
+    const anchorId = `gl-${L}`;
+    const a = document.createElement('a'); a.href = `#${anchorId}`; a.textContent = L; a.style.marginRight='6px';
+    toc.appendChild(a);
+    const h = document.createElement('div'); h.className='term anchor'; h.id=anchorId; h.innerHTML = `<b>${L}</b>`;
+    host.appendChild(h);
+    grouped[L].sort((a,b)=> a[0].localeCompare(b[0])).forEach(([t, d])=>{
+      const div = document.createElement('div'); div.className='term'; div.innerHTML = `<b>${t}</b><div class="muted">${d}</div>`;
+      host.appendChild(div);
+    });
+  });
+}
+function guideSearchApply(){
+  const q = (byId('guideSearch').value||'').toLowerCase();
+  document.querySelectorAll('#glossaryList .term').forEach(div=>{
+    if(div.id && div.id.startsWith('gl-')) { div.style.display='block'; return; }
+    const text = div.textContent.toLowerCase();
+    div.style.display = q ? (text.includes(q)? 'block':'none') : 'block';
+  });
+  document.querySelectorAll('.howto .panel').forEach(p=>{
+    p.style.display = 'block';
+  });
+}
+byId('guideSearch').addEventListener('input', guideSearchApply);
+
+/* Render and init */
+function postTaskUpdate(d){
+  updateDailyHeader(); updateTotalProgress();
+  renderWeekScroller(); renderWeeksFullList(); renderCalendarList(); renderDayList(); renderTodayWidget(); updateDashboards();
+}
+function renderAll(){
+  renderWeekScroller();
+  renderWeeksFullList();
+  renderCalendarList();
+  renderDayList();
+  renderGoals();
+  renderDayPicker();
+  renderFocusControls();
+  updateTotalProgress();
+  renderTodayBlock();
+  renderTodayWidget();
+  updateDashboards();
+  renderGlossary();
+  byId('scheduleInfo').textContent = `Scheduled ${Plan.flat.length} quest days (Mon–Fri) starting ${formatDate(new Date(getStartDate()))}.`;
+  byId('globalNotes').value = StorageShim.getItem(K.globalNotes) || '';
+  byId('globalNotes').oninput = () => StorageShim.setItem(K.globalNotes, byId('globalNotes').value);
+  updateStorageHealth();
+}
+getStartDate(); renderAll();
+
+/* Accessibility */
+byId('dayView').addEventListener('click', e=> { if(e.target.id==='dayView') closeDay(); });
+document.addEventListener('keydown', e=> { if(e.key==='Escape' && dayView.style.display==='block') closeDay(); });
+</script>
+
+
+</body></html>
